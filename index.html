@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ημερολόγιο Λήψης Φαρμακευτικής Αγωγής</title>
+  <!-- Tailwind CSS για μοντέρνο, responsive σχεδιασμό -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter με πλήρη υποστήριξη Ελληνικών -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    /* Ομαλές μεταβάσεις για τα κελιά του ημερολογίου */
+    .calendar-day {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .calendar-day:active {
+      transform: scale(0.96);
+    }
+    /* Προσαρμοσμένη μπάρα κύλισης */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased">
+
+  <!-- Επάνω Μπάρα Εφαρμογής & Ενιαίο Κουμπί Ειδοποιήσεων -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-md shadow-teal-600/20 shrink-0">
+          <!-- Εικονίδιο Χαπιού SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+            <path d="m8.5 8.5 7 7"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Ημερολόγιο Λήψης Φαρμακευτικής Αγωγής</h1>
+          <p class="text-xs text-slate-500">Καθημερινή παρακολούθηση &amp; υπενθυμίσεις 30' νωρίτερα</p>
+        </div>
+      </div>
+
+      <!-- Έξυπνο Ενιαίο Κουμπί Ειδοποιήσεων -->
+      <div class="flex items-center w-full sm:w-auto justify-end">
+        <button id="notifActionBtn" type="button" onclick="handleNotificationButtonClick()" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white transition shadow-sm flex items-center gap-2 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span>Πατήστε για Ενεργοποίηση Ειδοποιήσεων</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Κύριο Περιεχόμενο -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    <!-- Ενημερωτικό πλαίσιο για τις ειδοποιήσεις -->
+    <div id="notifTipBanner" class="mb-6 bg-sky-50 border border-sky-200 rounded-2xl p-3.5 flex items-start sm:items-center justify-between gap-3 text-xs sm:text-sm text-sky-900">
+      <div class="flex items-start sm:items-center gap-2.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-sky-600 shrink-0 mt-0.5 sm:mt-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <span><strong>Συμβουλή:</strong> Για να λαμβάνετε αυτόματα την ειδοποίηση <strong>30 λεπτά πριν</strong> από κάθε χάπι, αφήστε αυτή την καρτέλα ανοιχτή (ή καρφιτσωμένη) στον browser σας.</span>
+      </div>
+      <button type="button" onclick="document.getElementById('notifTipBanner').classList.add('hidden')" class="text-sky-600 hover:text-sky-800 p-1 rounded-lg hover:bg-sky-100 shrink-0 cursor-pointer" aria-label="Κλείσιμο">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- ΑΡΙΣΤΕΡΗ ΣΤΗΛΗ: Μηνιαίο Ημερολόγιο (7 στήλες σε μεγάλες οθόνες) -->
+      <section class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+        <!-- Πλοήγηση Μήνα -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 id="currentMonthYear" class="text-xl sm:text-2xl font-extrabold text-slate-900 capitalize">Νοέμβριος 2026</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Πατήστε σε μια ημερομηνία για έλεγχο των χαπιών της</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="changeMonth(-1)" class="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer" title="Προηγούμενος μήνας">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button type="button" onclick="goToToday()" class="px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-xs sm:text-sm font-semibold text-slate-700 transition cursor-pointer">
+              Σήμερα
+            </button>
+            <button type="button" onclick="changeMonth(1)" class="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer" title="Επόμενος μήνας">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Επικεφαλίδες Ημερών Εβδομάδας (Ξεκινάει από Δευτέρα) -->
+        <div class="grid grid-cols-7 gap-1.5 sm:gap-2 text-center mb-2">
+          <div class="text-xs font-bold text-slate-500 uppercase py-1">Δευ</div>
+          <div class="text-xs font-bold text-slate-500 uppercase py-1">Τρι</div>
+          <div class="text-xs font-bold text-slate-500 uppercase py-1">Τετ</div>
+          <div class="text-xs font-bold text-slate-500 uppercase py-1">Πεμ</div>
+          <div class="text-xs font-bold text-slate-500 uppercase py-1">Παρ</div>
+          <div class="text-xs font-bold text-slate-500 uppercase py-1">Σαβ</div>
+          <div class="text-xs font-bold text-slate-500 uppercase py-1">Κυρ</div>
+        </div>
+
+        <!-- Πλέγμα Ημερών -->
+        <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2">
+          <!-- Τα κελιά δημιουργούνται δυναμικά από JavaScript -->
+        </div>
+
+        <!-- Υπόμνημα Χρωμάτων -->
+        <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center gap-2">
+              <span class="w-4 h-4 rounded-md bg-emerald-100 border-2 border-emerald-500 inline-block"></span>
+              <span class="font-medium text-emerald-900">Όλα τα χάπια λήφθηκαν</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-4 h-4 rounded-md bg-rose-100 border-2 border-rose-400 inline-block"></span>
+              <span class="font-medium text-rose-900">Εκκρεμούν χάπια</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-4 h-4 rounded-md bg-slate-100 border border-slate-300 inline-block"></span>
+              <span>Χωρίς καταχωρημένα χάπια</span>
+            </div>
+          </div>
+          <div class="text-slate-400 italic">
+            * Κλικ σε ημέρα για επιλογή
+          </div>
+        </div>
+      </section>
+
+      <!-- ΔΕΞΙΑ ΣΤΗΛΗ: Λίστα Επιλεγμένης Ημέρας & Διαχείριση Χαπιών (5 στήλες) -->
+      <div class="lg:col-span-5 flex flex-col gap-6">
+        
+        <!-- ΚΑΡΤΑ 1: Χάπια Επιλεγμένης Ημερομηνίας (Checklist) -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+          <div class="flex items-center justify-between gap-2 pb-4 border-b border-slate-100">
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-wider text-teal-600">Επιλεγμένη Ημερομηνία</span>
+              <h3 id="selectedDateHeading" class="text-lg sm:text-xl font-bold text-slate-900 mt-0.5">Παρασκευή, 20 Νοεμβρίου 2026</h3>
+            </div>
+            <div id="dayStatusPill" class="px-3 py-1.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 shrink-0">
+              0 / 0
+            </div>
+          </div>
+
+          <!-- Μπάρα Προόδου Ημέρας -->
+          <div class="mt-4 mb-4">
+            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+              <div id="dayProgressBar" class="bg-rose-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Λίστα Χαπιών προς Τσεκάρισμα -->
+          <div id="dailyChecklist" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+            <!-- Δυναμικό περιεχόμενο -->
+          </div>
+        </section>
+
+        <!-- ΚΑΡΤΑ 2: Διαχείριση Καθημερινής Αγωγής (Προσθήκη / Τροποποίηση / Backup) -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900">Τα Καθημερινά μου Χάπια</h3>
+              <p class="text-xs text-slate-500">Προσθέστε ή τροποποιήστε τα φάρμακα και τις ώρες τους</p>
+            </div>
+            <button type="button" onclick="openMedModal()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              <span>Νέο Χάπι</span>
+            </button>
+          </div>
+
+          <!-- Λίστα Ορισμένων Φαρμάκων -->
+          <div id="medicationsList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+            <!-- Δυναμικό περιεχόμενο -->
+          </div>
+
+          <!-- Ενότητα Αντιγράφων Ασφαλείας (Backup JSON Εξαγωγή / Εισαγωγή) -->
+          <div class="mt-5 pt-4 border-t border-slate-100">
+            <div class="flex items-center justify-between mb-2.5">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Αντίγραφα Ασφαλείας (JSON)</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <button type="button" onclick="exportBackupJson()" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-800 border border-slate-200/80 text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2 cursor-pointer" title="Λήψη αντιγράφου ασφαλείας σε αρχείο JSON">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-teal-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" x2="12" y1="15" y2="3"/>
+                </svg>
+                <span>Εξαγωγή Backup</span>
+              </button>
+
+              <button type="button" onclick="triggerImportBackup()" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-800 border border-slate-200/80 text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2 cursor-pointer" title="Επαναφορά δεδομένων από αρχείο JSON">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-sky-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" x2="12" y1="3" y2="15"/>
+                </svg>
+                <span>Εισαγωγή Backup</span>
+              </button>
+
+              <!-- Κρυφό πεδίο επιλογής αρχείου JSON -->
+              <input type="file" id="importBackupInput" accept=".json,application/json" class="hidden" onchange="handleImportBackupFile(event)" />
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: Προσθήκη / Τροποποίηση Χαπιού -->
+  <div id="medModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 id="modalTitle" class="text-lg font-bold text-slate-900">Προσθήκη Νέου Χαπιού</h3>
+        <button type="button" onclick="closeMedModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+
+      <form id="medForm" onsubmit="saveMedication(event)" class="p-6 space-y-4">
+        <input type="hidden" id="medId" value="" />
+        
+        <div>
+          <label for="medName" class="block text-sm font-semibold text-slate-700 mb-1">Όνομα Χαπιού / Φαρμάκου *</label>
+          <input type="text" id="medName" required placeholder="π.χ. Βιταμίνη D3, Αντιβίωση, Πίεσης..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="medTime" class="block text-sm font-semibold text-slate-700 mb-1">Ώρα Λήψης *</label>
+            <input type="time" id="medTime" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm" />
+          </div>
+          <div>
+            <label for="medDosage" class="block text-sm font-semibold text-slate-700 mb-1">Δοσολογία / Σχόλιο</label>
+            <input type="text" id="medDosage" placeholder="π.χ. 1 δισκίο μετά το φαγητό" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm" />
+          </div>
+        </div>
+
+        <div class="bg-teal-50 border border-teal-100 rounded-xl p-3 text-xs text-teal-800 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-teal-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Θα λαμβάνετε ειδοποίηση <strong>30 λεπτά νωρίτερα</strong> από την επιλεγμένη ώρα.</span>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="closeMedModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+            Ακύρωση
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition cursor-pointer">
+            Αποθήκευση
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL ΕΠΙΒΕΒΑΙΩΣΗΣ ΔΙΑΓΡΑΦΗΣ -->
+  <div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-sm p-6 text-center">
+      <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+      </div>
+      <h4 class="text-lg font-bold text-slate-900">Διαγραφή Χαπιού;</h4>
+      <p id="deleteModalText" class="text-sm text-slate-500 mt-1 mb-5">Είστε σίγουροι ότι θέλετε να αφαιρέσετε αυτό το χάπι από την καθημερινή σας λίστα;</p>
+      <div class="flex items-center justify-center gap-3">
+        <button type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer">
+          Άκυρο
+        </button>
+        <button type="button" id="confirmDeleteBtn" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white transition cursor-pointer">
+          Διαγραφή
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST ΕΙΔΟΠΟΙΗΣΗΣ ΕΝΤΟΣ ΕΦΑΡΜΟΓΗΣ -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <script>
+    /**
+     * ============================================================================
+     * ΚΑΤΑΣΤΑΣΗ ΕΦΑΡΜΟΓΗΣ & LOCAL STORAGE
+     * ============================================================================
+     */
+    const STORAGE_KEYS = {
+      MEDS: 'pill_tracker_medications_v1',
+      LOGS: 'pill_tracker_logs_v1',
+      NOTIFIED: 'pill_tracker_notified_v1',
+      NOTIF_ENABLED: 'pill_tracker_notif_enabled_v1'
+    };
+
+    const GREEK_MONTHS = [
+      'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος',
+      'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος'
+    ];
+
+    const GREEK_MONTHS_GENITIVE = [
+      'Ιανουαρίου', 'Φεβρουαρίου', 'Μαρτίου', 'Απριλίου', 'Μαΐου', 'Ιουνίου',
+      'Ιουλίου', 'Αυγούστου', 'Σεπτεμβρίου', 'Οκτωβρίου', 'Νοεμβρίου', 'Δεκεμβρίου'
+    ];
+
+    const GREEK_DAYS_FULL = [
+      'Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'
+    ];
+
+    let medications = [];
+    let dailyLogs = {}; // Μορφή: { "YYYY-MM-DD": ["medId1", "medId2"] }
+    let notifiedToday = {}; // Μορφή: { "YYYY-MM-DD_medId_HH:MM": true }
+
+    const todayObj = new Date();
+    let currentViewYear = todayObj.getFullYear();
+    let currentViewMonth = todayObj.getMonth();
+    let selectedDateStr = formatDateKey(todayObj);
+    let pendingDeleteId = null;
+
+    /**
+     * ============================================================================
+     * ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ ΗΜΕΡΟΜΗΝΙΑΣ & ΑΠΟΘΗΚΕΥΣΗΣ
+     * ============================================================================
+     */
+    function formatDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatGreekDateFull(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      const dayName = GREEK_DAYS_FULL[date.getDay()];
+      return `${dayName}, ${d} ${GREEK_MONTHS_GENITIVE[m - 1]} ${y}`;
+    }
+
+    function calculateReminderTime(timeStr, minutesBefore = 30) {
+      const [h, m] = timeStr.split(':').map(Number);
+      let totalMinutes = h * 60 + m - minutesBefore;
+      if (totalMinutes < 0) totalMinutes += 24 * 60;
+      const remH = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+      const remM = String(totalMinutes % 60).padStart(2, '0');
+      return `${remH}:${remM}`;
+    }
+
+    function loadFromStorage() {
+      try {
+        const savedMeds = localStorage.getItem(STORAGE_KEYS.MEDS);
+        const savedLogs = localStorage.getItem(STORAGE_KEYS.LOGS);
+        const savedNotified = localStorage.getItem(STORAGE_KEYS.NOTIFIED);
+
+        medications = savedMeds ? JSON.parse(savedMeds) : [];
+        dailyLogs = savedLogs ? JSON.parse(savedLogs) : {};
+        notifiedToday = savedNotified ? JSON.parse(savedNotified) : {};
+
+        // Προσθήκη 2 ενδεικτικών χαπιών την πρώτη φορά
+        if (!savedMeds) {
+          medications = [
+            { id: 'demo-1', name: 'Πρωινό Χάπι / Βιταμίνη', time: '09:00', dosage: '1 δισκίο με νερό' },
+            { id: 'demo-2', name: 'Βραδινό Χάπι', time: '21:00', dosage: '1 δισκίο μετά το δείπνο' }
+          ];
+          saveMedsToStorage();
+        }
+      } catch (err) {
+        console.error('Σφάλμα ανάγνωσης localStorage:', err);
+        medications = [];
+        dailyLogs = {};
+      }
+    }
+
+    function saveMedsToStorage() {
+      localStorage.setItem(STORAGE_KEYS.MEDS, JSON.stringify(medications));
+    }
+
+    function saveLogsToStorage() {
+      localStorage.setItem(STORAGE_KEYS.LOGS, JSON.stringify(dailyLogs));
+    }
+
+    function saveNotifiedToStorage() {
+      localStorage.setItem(STORAGE_KEYS.NOTIFIED, JSON.stringify(notifiedToday));
+    }
+
+    /**
+     * ============================================================================
+     * ΛΟΓΙΚΗ ΗΜΕΡΟΛΟΓΙΟΥ & ΧΡΩΜΑΤΙΣΜΟΥ (ΚΟΚΚΙΝΟ / ΠΡΑΣΙΝΟ)
+     * ============================================================================
+     */
+    function getDateStatus(dateStr) {
+      if (medications.length === 0) return 'none';
+      const takenIds = dailyLogs[dateStr] || [];
+      const allTaken = medications.every(med => takenIds.includes(med.id));
+      return allTaken ? 'complete' : 'incomplete';
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendarGrid');
+      const monthYearLabel = document.getElementById('currentMonthYear');
+      if (!grid || !monthYearLabel) return;
+
+      monthYearLabel.textContent = `${GREEK_MONTHS[currentViewMonth]} ${currentViewYear}`;
+      grid.innerHTML = '';
+
+      // Πρώτη ημέρα του μήνα (Δευτέρα = 0, Κυριακή = 6)
+      const firstDayOfMonth = new Date(currentViewYear, currentViewMonth, 1);
+      let startDay = firstDayOfMonth.getDay() - 1;
+      if (startDay < 0) startDay = 6;
+
+      const daysInMonth = new Date(currentViewYear, currentViewMonth + 1, 0).getDate();
+      const todayKey = formatDateKey(new Date());
+
+      // Κενά κελιά πριν την 1η του μήνα
+      for (let i = 0; i < startDay; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'h-14 sm:h-16 rounded-xl bg-slate-50/60';
+        grid.appendChild(emptyCell);
+      }
+
+      // Κελιά ημερών του μήνα
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateObj = new Date(currentViewYear, currentViewMonth, day);
+        const dateStr = formatDateKey(dateObj);
+        const status = getDateStatus(dateStr);
+        const isSelected = dateStr === selectedDateStr;
+        const isToday = dateStr === todayKey;
+
+        const takenCount = (dailyLogs[dateStr] || []).filter(id => medications.some(m => m.id === id)).length;
+        const totalCount = medications.length;
+
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.onclick = () => selectDate(dateStr);
+
+        let colorClasses = '';
+        let badgeHtml = '';
+
+        if (status === 'complete') {
+          colorClasses = 'bg-emerald-100/90 hover:bg-emerald-200/80 border-emerald-500 text-emerald-950';
+          badgeHtml = `<span class="text-[10px] sm:text-xs font-bold text-emerald-700 flex items-center gap-0.5">✓ ${takenCount}/${totalCount}</span>`;
+        } else if (status === 'incomplete') {
+          colorClasses = 'bg-rose-100/90 hover:bg-rose-200/80 border-rose-400 text-rose-950';
+          badgeHtml = `<span class="text-[10px] sm:text-xs font-semibold text-rose-700">${takenCount}/${totalCount}</span>`;
+        } else {
+          colorClasses = 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700';
+          badgeHtml = `<span class="text-[10px] text-slate-400">-</span>`;
+        }
+
+        const selectedRing = isSelected
+          ? 'ring-2 ring-slate-900 ring-offset-1 shadow-md z-10 scale-[1.02]'
+          : 'border';
+
+        cell.className = `calendar-day relative h-14 sm:h-16 rounded-xl flex flex-col items-center justify-between p-1.5 sm:p-2 cursor-pointer ${colorClasses} ${selectedRing}`;
+
+        cell.innerHTML = `
+          <div class="w-full flex items-center justify-between">
+            <span class="text-sm sm:text-base font-extrabold leading-none ${isToday ? 'underline decoration-2 underline-offset-2' : ''}">${day}</span>
+            ${isToday ? '<span class="w-2 h-2 rounded-full bg-slate-900" title="Σήμερα"></span>' : ''}
+          </div>
+          <div class="w-full flex justify-end">
+            ${badgeHtml}
+          </div>
+        `;
+
+        grid.appendChild(cell);
+      }
+    }
+
+    function selectDate(dateStr) {
+      selectedDateStr = dateStr;
+      renderCalendar();
+      renderDailyChecklist();
+    }
+
+    function changeMonth(delta) {
+      currentViewMonth += delta;
+      if (currentViewMonth > 11) {
+        currentViewMonth = 0;
+        currentViewYear++;
+      } else if (currentViewMonth < 0) {
+        currentViewMonth = 11;
+        currentViewYear--;
+      }
+      renderCalendar();
+    }
+
+    function goToToday() {
+      const now = new Date();
+      currentViewYear = now.getFullYear();
+      currentViewMonth = now.getMonth();
+      selectedDateStr = formatDateKey(now);
+      renderCalendar();
+      renderDailyChecklist();
+    }
+
+    /**
+     * ============================================================================
+     * ΛΙΣΤΑ ΧΑΠΙΩΝ ΕΠΙΛΕΓΜΕΝΗΣ ΗΜΕΡΑΣ (CHECKLIST)
+     * ============================================================================
+     */
+    function renderDailyChecklist() {
+      const heading = document.getElementById('selectedDateHeading');
+      const checklistEl = document.getElementById('dailyChecklist');
+      const statusPill = document.getElementById('dayStatusPill');
+      const progressBar = document.getElementById('dayProgressBar');
+      if (!heading || !checklistEl || !statusPill || !progressBar) return;
+
+      heading.textContent = formatGreekDateFull(selectedDateStr);
+
+      const sortedMeds = [...medications].sort((a, b) => a.time.localeCompare(b.time));
+      const takenIds = dailyLogs[selectedDateStr] || [];
+
+      const total = sortedMeds.length;
+      const completed = sortedMeds.filter(m => takenIds.includes(m.id)).length;
+      const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      progressBar.style.width = `${percent}%`;
+      if (total === 0) {
+        statusPill.textContent = 'Κανένα χάπι';
+        statusPill.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 shrink-0';
+        progressBar.className = 'bg-slate-400 h-2.5 rounded-full transition-all duration-300';
+      } else if (completed === total) {
+        statusPill.textContent = `Ολοκληρώθηκε (${completed}/${total})`;
+        statusPill.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 shrink-0';
+        progressBar.className = 'bg-emerald-500 h-2.5 rounded-full transition-all duration-300';
+      } else {
+        statusPill.textContent = `Εκκρεμούν (${completed}/${total})`;
+        statusPill.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 shrink-0';
+        progressBar.className = 'bg-rose-500 h-2.5 rounded-full transition-all duration-300';
+      }
+
+      if (sortedMeds.length === 0) {
+        checklistEl.innerHTML = `
+          <div class="text-center py-8 px-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            <p class="text-sm font-medium text-slate-600">Δεν έχετε προσθέσει ακόμα χάπια.</p>
+            <p class="text-xs text-slate-400 mt-1">Πατήστε «+ Νέο Χάπι» παρακάτω για να ξεκινήσετε.</p>
+          </div>
+        `;
+        return;
+      }
+
+      checklistEl.innerHTML = '';
+      sortedMeds.forEach(med => {
+        const isChecked = takenIds.includes(med.id);
+        const reminderTime = calculateReminderTime(med.time, 30);
+
+        const item = document.createElement('label');
+        item.className = `flex items-center justify-between gap-3 p-3.5 rounded-xl border transition cursor-pointer select-none ${
+          isChecked
+            ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950'
+            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+        }`;
+
+        item.innerHTML = `
+          <div class="flex items-center gap-3.5 min-w-0">
+            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="togglePillForSelectedDate('${med.id}')"
+              class="w-5 h-5 rounded-md accent-emerald-600 cursor-pointer shrink-0" />
+            <div class="min-w-0">
+              <div class="font-bold text-sm sm:text-base truncate ${isChecked ? 'line-through text-emerald-800/80' : 'text-slate-900'}">
+                ${escapeHtml(med.name)}
+              </div>
+              <div class="text-xs text-slate-500 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                ${med.dosage ? `<span>${escapeHtml(med.dosage)}</span>` : ''}
+                <span class="text-teal-700 font-medium">• Ειδοποίηση: ${reminderTime}</span>
+              </div>
+            </div>
+          </div>
+          <div class="shrink-0 flex flex-col items-end">
+            <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold ${
+              isChecked ? 'bg-emerald-200/70 text-emerald-900' : 'bg-slate-100 text-slate-800'
+            }">
+              ${med.time}
+            </span>
+          </div>
+        `;
+
+        checklistEl.appendChild(item);
+      });
+    }
+
+    function togglePillForSelectedDate(medId) {
+      if (!dailyLogs[selectedDateStr]) {
+        dailyLogs[selectedDateStr] = [];
+      }
+      const idx = dailyLogs[selectedDateStr].indexOf(medId);
+      if (idx > -1) {
+        dailyLogs[selectedDateStr].splice(idx, 1);
+      } else {
+        dailyLogs[selectedDateStr].push(medId);
+      }
+      saveLogsToStorage();
+      renderDailyChecklist();
+      renderCalendar();
+    }
+
+    /**
+     * ============================================================================
+     * ΔΙΑΧΕΙΡΙΣΗ ΦΑΡΜΑΚΩΝ (ΠΡΟΣΘΗΚΗ / ΤΡΟΠΟΠΟΙΗΣΗ / ΔΙΑΓΡΑΦΗ)
+     * ============================================================================
+     */
+    function renderMedicationsList() {
+      const listEl = document.getElementById('medicationsList');
+      if (!listEl) return;
+
+      const sortedMeds = [...medications].sort((a, b) => a.time.localeCompare(b.time));
+
+      if (sortedMeds.length === 0) {
+        listEl.innerHTML = `
+          <div class="text-center py-6 px-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-500">
+            Η λίστα των φαρμάκων σας είναι κενή.
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = '';
+      sortedMeds.forEach(med => {
+        const card = document.createElement('div');
+        card.className = 'flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:border-slate-300 transition';
+
+        card.innerHTML = `
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-md bg-teal-100 text-teal-800 text-xs font-bold">${med.time}</span>
+              <h4 class="font-bold text-sm text-slate-900 truncate">${escapeHtml(med.name)}</h4>
+            </div>
+            ${med.dosage ? `<p class="text-xs text-slate-500 mt-1 truncate">${escapeHtml(med.dosage)}</p>` : ''}
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button type="button" onclick="openMedModal('${med.id}')" title="Τροποποίηση" class="p-2 rounded-lg text-slate-500 hover:text-teal-700 hover:bg-teal-50 transition cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+            </button>
+            <button type="button" onclick="openDeleteModal('${med.id}')" title="Διαγραφή" class="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </button>
+          </div>
+        `;
+        listEl.appendChild(card);
+      });
+    }
+
+    function openMedModal(editId = null) {
+      const modal = document.getElementById('medModal');
+      const title = document.getElementById('modalTitle');
+      const idInput = document.getElementById('medId');
+      const nameInput = document.getElementById('medName');
+      const timeInput = document.getElementById('medTime');
+      const dosageInput = document.getElementById('medDosage');
+
+      if (editId) {
+        const med = medications.find(m => m.id === editId);
+        if (!med) return;
+        title.textContent = 'Τροποποίηση Χαπιού';
+        idInput.value = med.id;
+        nameInput.value = med.name;
+        timeInput.value = med.time;
+        dosageInput.value = med.dosage || '';
+      } else {
+        title.textContent = 'Προσθήκη Νέου Χαπιού';
+        idInput.value = '';
+        nameInput.value = '';
+        timeInput.value = '09:00';
+        dosageInput.value = '';
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => nameInput.focus(), 50);
+    }
+
+    function closeMedModal() {
+      const modal = document.getElementById('medModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function saveMedication(e) {
+      e.preventDefault();
+      const id = document.getElementById('medId').value.trim();
+      const name = document.getElementById('medName').value.trim();
+      const time = document.getElementById('medTime').value.trim();
+      const dosage = document.getElementById('medDosage').value.trim();
+
+      if (!name || !time) return;
+
+      if (id) {
+        const index = medications.findIndex(m => m.id === id);
+        if (index > -1) {
+          medications[index] = { ...medications[index], name, time, dosage };
+          showToast('Ενημερώθηκε', `Το χάπι «${name}» τροποποιήθηκε επιτυχώς.`, 'teal');
+        }
+      } else {
+        const newMed = {
+          id: 'med_' + Date.now(),
+          name,
+          time,
+          dosage
+        };
+        medications.push(newMed);
+        showToast('Προστέθηκε', `Το χάπι «${name}» προστέθηκε στις ${time}.`, 'teal');
+      }
+
+      saveMedsToStorage();
+      closeMedModal();
+      renderMedicationsList();
+      renderDailyChecklist();
+      renderCalendar();
+    }
+
+    function openDeleteModal(medId) {
+      const med = medications.find(m => m.id === medId);
+      if (!med) return;
+      pendingDeleteId = medId;
+      document.getElementById('deleteModalText').textContent =
+        `Είστε σίγουροι ότι θέλετε να διαγράψετε το χάπι «${med.name}» (${med.time});`;
+      const modal = document.getElementById('deleteModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeDeleteModal() {
+      pendingDeleteId = null;
+      const modal = document.getElementById('deleteModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+      if (!pendingDeleteId) return;
+      medications = medications.filter(m => m.id !== pendingDeleteId);
+      saveMedsToStorage();
+      closeDeleteModal();
+      renderMedicationsList();
+      renderDailyChecklist();
+      renderCalendar();
+      showToast('Διαγράφηκε', 'Το χάπι αφαιρέθηκε από τη λίστα σας.', 'slate');
+    });
+
+    /**
+     * ============================================================================
+     * ΕΞΑΓΩΓΗ & ΕΙΣΑΓΩΓΗ BACKUP (JSON)
+     * ============================================================================
+     */
+    function exportBackupJson() {
+      try {
+        const backupPayload = {
+          appVersion: '1.0',
+          exportedAt: new Date().toISOString(),
+          medications: medications,
+          dailyLogs: dailyLogs
+        };
+
+        const jsonStr = JSON.stringify(backupPayload, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const todayKey = formatDateKey(new Date());
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `imerologio-agogis-backup-${todayKey}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast('Εξαγωγή Backup', 'Το αρχείο αντιγράφου ασφαλείας (.json) αποθηκεύτηκε στον υπολογιστή σας.', 'teal');
+      } catch (err) {
+        console.error('Σφάλμα εξαγωγής backup:', err);
+        showToast('Σφάλμα Εξαγωγής', 'Δεν ήταν δυνατή η δημιουργία του αρχείου backup.', 'rose');
+      }
+    }
+
+    function triggerImportBackup() {
+      const input = document.getElementById('importBackupInput');
+      if (input) {
+        input.value = '';
+        input.click();
+      }
+    }
+
+    function handleImportBackupFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+
+          if (!parsed || !Array.isArray(parsed.medications) || typeof parsed.dailyLogs !== 'object' || parsed.dailyLogs === null) {
+            throw new Error('Μη έγκυρη δομή αρχείου JSON');
+          }
+
+          // Επικύρωση αντικειμένων φαρμάκων
+          const validMeds = parsed.medications.filter(
+            m => m && typeof m.id === 'string' && typeof m.name === 'string' && typeof m.time === 'string'
+          );
+
+          medications = validMeds;
+          dailyLogs = parsed.dailyLogs;
+
+          saveMedsToStorage();
+          saveLogsToStorage();
+
+          renderMedicationsList();
+          renderDailyChecklist();
+          renderCalendar();
+
+          showToast(
+            'Επιτυχής Επαναφορά',
+            `Φορτώθηκαν ${medications.length} φάρμακα και το ιστορικό λήψεών σας.`,
+            'teal'
+          );
+        } catch (err) {
+          console.error('Σφάλμα εισαγωγής backup:', err);
+          showToast(
+            'Μη Έγκυρο Αρχείο',
+            'Το επιλεγμένο αρχείο JSON δεν είναι έγκυρο αντίγραφο ασφαλείας της εφαρμογής.',
+            'rose'
+          );
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    /**
+     * ============================================================================
+     * ΕΝΙΑΙΟ ΚΟΥΜΠΙ ΕΙΔΟΠΟΙΗΣΕΩΝ & ΗΧΟΣ ΥΠΕΝΘΥΜΙΣΗΣ
+     * ============================================================================
+     */
+    function getEffectiveNotificationState() {
+      const userOptedIn = localStorage.getItem(STORAGE_KEYS.NOTIF_ENABLED) === 'true';
+
+      if (!('Notification' in window)) {
+        return userOptedIn ? 'granted' : 'unsupported';
+      }
+
+      if (Notification.permission === 'denied') {
+        localStorage.removeItem(STORAGE_KEYS.NOTIF_ENABLED);
+        return 'denied';
+      }
+
+      if (Notification.permission === 'granted' || userOptedIn) {
+        return 'granted';
+      }
+
+      return 'default';
+    }
+
+    function updateNotificationButton() {
+      const btn = document.getElementById('notifActionBtn');
+      if (!btn) return;
+
+      const state = getEffectiveNotificationState();
+
+      if (state === 'unsupported') {
+        btn.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 border border-slate-200 flex items-center gap-2 cursor-not-allowed';
+        btn.title = 'Ο browser σας δεν υποστηρίζει ειδοποιήσεις επιφάνειας εργασίας';
+        btn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5"/><path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+          <span>Μη Διαθέσιμες στον Browser</span>
+        `;
+      } else if (state === 'granted') {
+        btn.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20 transition flex items-center gap-2 cursor-pointer';
+        btn.title = 'Οι ειδοποιήσεις είναι ενεργοποιημένες. Πατήστε για έλεγχο ήχου.';
+        btn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          <span>Ειδοποιήσεις Ενεργές στον Browser</span>
+        `;
+      } else if (state === 'denied') {
+        btn.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer';
+        btn.title = 'Έχετε αποκλείσει τις ειδοποιήσεις. Πατήστε για οδηγίες ενεργοποίησης.';
+        btn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          <span>Ειδοποιήσεις Αποκλεισμένες (Ρυθμίσεις)</span>
+        `;
+      } else {
+        btn.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white transition shadow-sm shadow-amber-500/20 flex items-center gap-2 cursor-pointer';
+        btn.title = 'Πατήστε εδώ για να επιτρέψετε τις ειδοποιήσεις στον browser σας';
+        btn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span>Πατήστε για Ενεργοποίηση Ειδοποιήσεων</span>
+        `;
+      }
+    }
+
+    async function handleNotificationButtonClick() {
+      const state = getEffectiveNotificationState();
+
+      if (state === 'unsupported') {
+        showToast('Μη Διαθέσιμες', 'Ο browser σας δεν υποστηρίζει ειδοποιήσεις συστήματος.', 'rose');
+        return;
+      }
+
+      if (state === 'granted') {
+        updateNotificationButton();
+        playChimeSound();
+        showToast(
+          'Ειδοποιήσεις Ενεργές',
+          'Οι ειδοποιήσεις είναι ήδη ενεργές στον browser! Θα ειδοποιείστε αυτόματα 30 λεπτά πριν από κάθε χάπι.',
+          'teal'
+        );
+        return;
+      }
+
+      if (state === 'denied') {
+        updateNotificationButton();
+        showToast(
+          'Αποκλεισμένες Ειδοποιήσεις',
+          'Για να τις ενεργοποιήσετε, πατήστε το εικονίδιο κλειδαριάς (ή ρυθμίσεων) αριστερά στη γραμμή διευθύνσεων του browser και επιτρέψτε τις «Ειδοποιήσεις».',
+          'rose',
+          8000
+        );
+        return;
+      }
+
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'denied') {
+          localStorage.removeItem(STORAGE_KEYS.NOTIF_ENABLED);
+          updateNotificationButton();
+          showToast(
+            'Αποκλεισμός Ειδοποιήσεων',
+            'Αποκλείσατε τις ειδοποιήσεις. Μπορείτε να τις επιτρέψετε ανά πάσα στιγμή από το εικονίδιο ρυθμίσεων της γραμμής διευθύνσεων.',
+            'rose',
+            7000
+          );
+        } else {
+          localStorage.setItem(STORAGE_KEYS.NOTIF_ENABLED, 'true');
+          updateNotificationButton();
+          playChimeSound();
+          showToast('Επιτυχία!', 'Οι ειδοποιήσεις ενεργοποιήθηκαν. Θα ειδοποιείστε 30 λεπτά πριν από κάθε χάπι.', 'teal');
+        }
+      } catch (err) {
+        console.error('Σφάλμα αιτήματος ειδοποιήσεων:', err);
+        localStorage.setItem(STORAGE_KEYS.NOTIF_ENABLED, 'true');
+        updateNotificationButton();
+        playChimeSound();
+      }
+    }
+
+    function playChimeSound() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const now = ctx.currentTime;
+
+        const notes = [587.33, 880]; // D5 -> A5 ευχάριστο καμπανάκι
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.18);
+
+          gain.gain.setValueAtTime(0.001, now + idx * 0.18);
+          gain.gain.exponentialRampToValueAtTime(0.2, now + idx * 0.18 + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.18 + 0.55);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(now + idx * 0.18);
+          osc.stop(now + idx * 0.18 + 0.6);
+        });
+      } catch (e) {
+        // Αγνόηση αν ο browser μπλοκάρει τον ήχο πριν από αλληλεπίδραση χρήστη
+      }
+    }
+
+    function triggerPillNotification(title, body) {
+      playChimeSound();
+      showToast(title, body, 'teal', 12000);
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(title, {
+            body: body,
+            tag: title + body,
+            requireInteraction: true
+          });
+        } catch (err) {
+          console.error('Notification error:', err);
+        }
+      }
+    }
+
+    function checkUpcomingPills() {
+      const now = new Date();
+      const todayKey = formatDateKey(now);
+      const currentHH = String(now.getHours()).padStart(2, '0');
+      const currentMM = String(now.getMinutes()).padStart(2, '0');
+      const currentTimeStr = `${currentHH}:${currentMM}`;
+
+      const takenToday = dailyLogs[todayKey] || [];
+
+      medications.forEach(med => {
+        if (takenToday.includes(med.id)) return;
+
+        const targetReminderTime = calculateReminderTime(med.time, 30);
+        const notifKey = `${todayKey}_${med.id}_${med.time}`;
+
+        if (currentTimeStr === targetReminderTime && !notifiedToday[notifKey]) {
+          notifiedToday[notifKey] = true;
+          saveNotifiedToStorage();
+
+          const dosageInfo = med.dosage ? ` (${med.dosage})` : '';
+          triggerPillNotification(
+            `⏰ Υπενθύμιση σε 30 λεπτά: ${med.name}`,
+            `Προγραμματισμένη ώρα λήψης: ${med.time}${dosageInfo}`
+          );
+        }
+      });
+    }
+
+    function watchNotificationPermissionChanges() {
+      if ('permissions' in navigator && typeof navigator.permissions.query === 'function') {
+        navigator.permissions.query({ name: 'notifications' })
+          .then(permissionStatus => {
+            permissionStatus.onchange = () => {
+              if (Notification.permission === 'granted') {
+                localStorage.setItem(STORAGE_KEYS.NOTIF_ENABLED, 'true');
+              } else if (Notification.permission === 'denied') {
+                localStorage.removeItem(STORAGE_KEYS.NOTIF_ENABLED);
+              }
+              updateNotificationButton();
+            };
+          })
+          .catch(() => {});
+      }
+
+      window.addEventListener('focus', updateNotificationButton);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          updateNotificationButton();
+        }
+      });
+    }
+
+    function showToast(title, message, theme = 'teal', duration = 5000) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'pointer-events-auto bg-white border border-slate-200 shadow-lg rounded-2xl p-4 flex items-start gap-3 transition-all duration-300 transform translate-y-2 opacity-0';
+
+      const iconBg = theme === 'rose' ? 'bg-rose-100 text-rose-600' : 'bg-teal-100 text-teal-600';
+
+      toast.innerHTML = `
+        <div class="w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h5 class="text-sm font-bold text-slate-900">${escapeHtml(title)}</h5>
+          <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">${escapeHtml(message)}</p>
+        </div>
+        <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      `;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    /**
+     * ============================================================================
+     * ΕΚΚΙΝΗΣΗ ΕΦΑΡΜΟΓΗΣ
+     * ============================================================================
+     */
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFromStorage();
+      updateNotificationButton();
+      watchNotificationPermissionChanges();
+      renderCalendar();
+      renderDailyChecklist();
+      renderMedicationsList();
+
+      // Άμεσος έλεγχος και επανάληψη κάθε 15 δευτερόλεπτα
+      checkUpcomingPills();
+      setInterval(checkUpcomingPills, 15000);
+    });
+  </script>
+</body>
+</html>
