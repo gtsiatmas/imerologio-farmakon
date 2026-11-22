@@ -228,7 +228,7 @@
               </div>
 
               <!-- Κουμπί Έκδοσης PDF Λίστας Φαρμάκων με φίλτρο ημερομηνίας -->
-              <button type="button" onclick="openMedListPdfModal()" class="w-full px-3.5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white border border-teal-600 text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer" title="Έκδοση PDF μόνο με τη λίστα των φαρμάκων για συγκεκριμένη ημερομηνία">
+              <button type="button" onclick="openMedListPdfModal()" class="w-full px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-600 text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer" title="Έκδοση PDF μόνο με τη λίστα των φαρμάκων για συγκεκριμένη ημερομηνία">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                   <line x1="16" y1="2" x2="16" y2="6"/>
@@ -348,7 +348,7 @@
         <div>
           <label for="deleteEndDate" class="block text-xs font-semibold text-slate-700 mb-1">Καταληκτική Ημερομηνία Λήψης *</label>
           <input type="date" id="deleteEndDate" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm" />
-          <p class="text-[11px] text-slate-400 mt-1">Από την επόμενη ημέρα δεν θα ζητείται στο καθημερινό ημερολόγιο.</p>
+          <p class="text-[11px] text-slate-400 mt-1">Από την ημερομηνία αυτή και μετά δεν θα ζητείται στο καθημερινό ημερολόγιο.</p>
         </div>
         <div>
           <label for="deleteComment" class="block text-xs font-semibold text-slate-700 mb-1">Σχόλιο / Αιτία διακοπής (προαιρετικό)</label>
@@ -602,23 +602,6 @@
       return formatDateKey(dt);
     }
 
-    function convertThreeToTwoDosage(val) {
-      if (typeof val !== 'string') return val;
-      const trimmed = val.trim();
-      if (!trimmed) return val;
-      const lower = trimmed.toLowerCase();
-      if (lower.startsWith('3 δισκία')) {
-        return '2 Δισκία' + trimmed.slice('3 δισκία'.length);
-      }
-      if (lower.startsWith('3 δισκίο')) {
-        return '2 Δισκίο' + trimmed.slice('3 δισκίο'.length);
-      }
-      if (trimmed.startsWith('3 ')) {
-        return '2 ' + trimmed.slice(2);
-      }
-      return val;
-    }
-
     function normalizeMedication(med, fallbackDate) {
       const rawStartDate = med.startDate && /^\d{4}-\d{2}-\d{2}$/.test(med.startDate)
         ? med.startDate
@@ -656,13 +639,15 @@
           ];
 
       let periods = Array.isArray(med.periods) && med.periods.length > 0
-        ? med.periods.map(p => ({
-            from: p.from || startDate,
-            to: p.to || null,
-            name: p.name || med.name,
-            time: p.time || med.time,
-            dosage: p.dosage !== undefined ? p.dosage : (med.dosage || '')
-          }))
+        ? med.periods
+            .map(p => ({
+              from: p.from || startDate,
+              to: p.to || null,
+              name: p.name || med.name,
+              time: p.time || med.time,
+              dosage: p.dosage !== undefined ? p.dosage : (med.dosage || '')
+            }))
+            .sort((a, b) => (a.from || '').localeCompare(b.from || ''))
         : [
             {
               from: startDate,
@@ -673,81 +658,37 @@
             }
           ];
 
-      if (periods.length === 1 && Array.isArray(med.history)) {
-        const modEv = [...med.history].reverse().find(h => h && h.type === 'modified' && h.date && h.date > startDate && typeof h.summary === 'string');
-        if (modEv) {
-          const prevDay = addDaysToDateKey(modEv.date, -1);
-          if (prevDay >= startDate) {
-            const dosMatch = modEv.summary.match(/Δοσολογία:\s*«([^»]*)»/);
-            const timeMatch = modEv.summary.match(/Ώρα:\s*([^\s|]+)/);
-            const nameMatch = modEv.summary.match(/Όνομα:\s*«([^»]*)»/);
-            const oldDosage = dosMatch ? (med.dosage || '') : (med.dosage || '');
-            const oldTime = timeMatch ? med.time : med.time;
-            const oldName = nameMatch ? med.name : med.name;
-            periods = [
-              {
-                from: startDate,
-                to: prevDay,
-                name: oldName,
-                time: oldTime,
-                dosage: oldDosage
-              },
-              {
-                from: modEv.date,
-                to: endDate,
-                name: med.name,
-                time: med.time,
-                dosage: med.dosage || ''
-              }
-            ];
-          }
-        }
-      }
-
-      if (Array.isArray(history) && periods.length > 0) {
-        const modEvents = history.filter(h => h && h.type === 'modified' && h.date);
+      if (periods.length === 1 && Array.isArray(history)) {
+        const modEvents = history
+          .filter(h => h && h.type === 'modified' && h.date && h.date > startDate)
+          .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
         if (modEvents.length > 0) {
-          const firstMod = [...modEvents].sort((a, b) => (a.date || '').localeCompare(b.date || ''))[0];
-          const prevDay = addDaysToDateKey(firstMod.date, -1);
-          if (prevDay >= startDate) {
-            let priorDosage = periods[0].dosage !== undefined ? periods[0].dosage : (med.dosage || '');
-            let priorTime = periods[0].time || med.time;
-            let priorName = periods[0].name || med.name;
-
-            if (firstMod.prevSnapshot && firstMod.prevSnapshot.dosage !== undefined) {
-              priorDosage = firstMod.prevSnapshot.dosage;
-              priorTime = firstMod.prevSnapshot.time || priorTime;
-              priorName = firstMod.prevSnapshot.name || priorName;
-            } else {
-              priorDosage = convertThreeToTwoDosage(priorDosage);
+          const rebuilt = [];
+          let curFrom = startDate;
+          for (let i = 0; i < modEvents.length; i++) {
+            const ev = modEvents[i];
+            const prevDay = addDaysToDateKey(ev.date, -1);
+            if (prevDay >= curFrom) {
+              const snap = ev.prevSnapshot || {};
+              rebuilt.push({
+                from: curFrom,
+                to: prevDay,
+                name: snap.name || med.name,
+                time: snap.time || med.time,
+                dosage: snap.dosage !== undefined ? snap.dosage : (med.dosage || '')
+              });
+              curFrom = ev.date;
             }
-
-            if (periods.length === 1) {
-              periods = [
-                {
-                  from: startDate,
-                  to: prevDay,
-                  name: priorName,
-                  time: priorTime,
-                  dosage: priorDosage
-                },
-                {
-                  from: firstMod.date,
-                  to: endDate,
-                  name: med.name,
-                  time: med.time,
-                  dosage: med.dosage || ''
-                }
-              ];
-            } else if (periods[0].dosage === (med.dosage || '') && priorDosage !== (med.dosage || '')) {
-              periods[0] = {
-                ...periods[0],
-                to: periods[0].to || prevDay,
-                name: priorName,
-                time: priorTime,
-                dosage: priorDosage
-              };
-            }
+          }
+          rebuilt.push({
+            from: curFrom,
+            to: endDate,
+            name: med.name,
+            time: med.time,
+            dosage: med.dosage || ''
+          });
+          if (rebuilt.length > 1) {
+            periods = rebuilt;
           }
         }
       }
@@ -776,84 +717,28 @@
         const nextFrom = (i + 1 < periods.length && periods[i + 1].from) ? addDaysToDateKey(periods[i + 1].from, -1) : null;
         const pTo = p.to || nextFrom || med.endDate || null;
         if (dateStr >= pFrom && (!pTo || dateStr <= pTo)) {
-          let dVal = p.dosage !== undefined ? p.dosage : (med.dosage || '');
-          let nVal = p.name || med.name;
-          let tVal = p.time || med.time;
-          if (Array.isArray(med.history)) {
-            const laterMods = med.history
-              .filter(h => h && h.type === 'modified' && h.date && dateStr < h.date)
-              .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-            if (laterMods.length > 0) {
-              const nextMod = laterMods[0];
-              if (nextMod.prevSnapshot) {
-                if (nextMod.prevSnapshot.name) nVal = nextMod.prevSnapshot.name;
-                if (nextMod.prevSnapshot.time) tVal = nextMod.prevSnapshot.time;
-                if (nextMod.prevSnapshot.dosage !== undefined && nextMod.prevSnapshot.dosage !== '') {
-                  dVal = nextMod.prevSnapshot.dosage;
-                }
-              }
-              dVal = convertThreeToTwoDosage(dVal);
-            }
-          }
-          if (i === 0 && periods.length > 1 && dVal === (med.dosage || '')) {
-            dVal = convertThreeToTwoDosage(dVal);
-          }
           return {
-            name: nVal,
-            time: tVal,
-            dosage: dVal
+            name: p.name || med.name,
+            time: p.time || med.time,
+            dosage: p.dosage !== undefined ? p.dosage : (med.dosage || '')
           };
         }
       }
 
       if (dateStr < (periods[0].from || med.startDate || APP_DEFAULT_START_DATE)) {
         const firstP = periods[0];
-        let earlyDosage = firstP.dosage !== undefined ? firstP.dosage : (med.dosage || '');
-        earlyDosage = convertThreeToTwoDosage(earlyDosage);
         return {
           name: firstP.name || med.name,
           time: firstP.time || med.time,
-          dosage: earlyDosage
+          dosage: firstP.dosage !== undefined ? firstP.dosage : (med.dosage || '')
         };
       }
 
-      if (periods.length >= 2) {
-        const secondP = periods[1];
-        if (secondP && secondP.from && dateStr < secondP.from) {
-          const firstP = periods[0];
-          return {
-            name: firstP.name || med.name,
-            time: firstP.time || med.time,
-            dosage: firstP.dosage !== undefined ? firstP.dosage : (med.dosage || '')
-          };
-        }
-      }
-
-      let snapName = med.name;
-      let snapTime = med.time;
-      let snapDosage = med.dosage || '';
-
-      if (Array.isArray(med.history)) {
-        const laterMods = med.history
-          .filter(h => h && h.type === 'modified' && h.date && dateStr < h.date)
-          .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-        if (laterMods.length > 0) {
-          const nextMod = laterMods[0];
-          if (nextMod.prevSnapshot) {
-            if (nextMod.prevSnapshot.name) snapName = nextMod.prevSnapshot.name;
-            if (nextMod.prevSnapshot.time) snapTime = nextMod.prevSnapshot.time;
-            if (nextMod.prevSnapshot.dosage !== undefined && nextMod.prevSnapshot.dosage !== '') {
-              snapDosage = nextMod.prevSnapshot.dosage;
-            }
-          }
-          snapDosage = convertThreeToTwoDosage(snapDosage);
-        }
-      }
-
+      const lastP = periods[periods.length - 1];
       return {
-        name: snapName,
-        time: snapTime,
-        dosage: snapDosage
+        name: lastP.name || med.name,
+        time: lastP.time || med.time,
+        dosage: lastP.dosage !== undefined ? lastP.dosage : (med.dosage || '')
       };
     }
 
@@ -881,7 +766,7 @@
       }
 
       if (dateStr < effectiveStart) return false;
-      if (med.endDate && dateStr > med.endDate) return false;
+      if (med.endDate && dateStr >= med.endDate) return false;
       return true;
     }
 
@@ -1063,7 +948,8 @@
       const takenIds = dailyLogs[selectedDateStr] || [];
 
       const total = activeMedsForDay.length;
-      const completed = activeMedsForDay.filter(m => takenIds.includes(m.id)).length;
+      const completed = activeMedsForDay.filter(item => takenIds.includes(item.med.id)).length;
+      const pending = total - completed;
       const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
       progressBar.style.width = `${percent}%`;
@@ -1076,7 +962,7 @@
         statusPill.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 shrink-0';
         progressBar.className = 'bg-emerald-500 h-2.5 rounded-full transition-all duration-300';
       } else {
-        statusPill.textContent = `Εκκρεμούν (${completed}/${total})`;
+        statusPill.textContent = `Εκκρεμούν (${pending}/${total})`;
         statusPill.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 shrink-0';
         progressBar.className = 'bg-rose-500 h-2.5 rounded-full transition-all duration-300';
       }
@@ -1318,15 +1204,10 @@
 
           const history = Array.isArray(oldMed.history) ? [...oldMed.history] : [];
           const periods = Array.isArray(oldMed.periods) ? [...oldMed.periods] : [];
-          const prevDosageVal = (Array.isArray(oldMed.periods) && oldMed.periods.length > 0 && oldMed.periods[0].dosage !== undefined)
-            ? oldMed.periods[0].dosage
-            : (oldMed.dosage || '');
-          const prevTimeVal = (Array.isArray(oldMed.periods) && oldMed.periods.length > 0 && oldMed.periods[0].time)
-            ? oldMed.periods[0].time
-            : oldMed.time;
-          const prevNameVal = (Array.isArray(oldMed.periods) && oldMed.periods.length > 0 && oldMed.periods[0].name)
-            ? oldMed.periods[0].name
-            : oldMed.name;
+          const prevSnap = getMedicationSnapshotForDate(oldMed, effectiveModDate);
+          const prevDosageVal = prevSnap.dosage !== undefined ? prevSnap.dosage : (oldMed.dosage || '');
+          const prevTimeVal = prevSnap.time || oldMed.time;
+          const prevNameVal = prevSnap.name || oldMed.name;
 
           if (changes.length > 0 || comment) {
             history.push({
@@ -1348,13 +1229,15 @@
 
           if (oldMed.name !== name || oldMed.time !== time || (oldMed.dosage || '') !== dosage) {
             const effectiveStart = preservedStart;
-            const normalizedExisting = periods.map(p => ({
-              from: p.from || effectiveStart,
-              to: p.to || null,
-              name: p.name || oldMed.name,
-              time: p.time || oldMed.time,
-              dosage: p.dosage !== undefined ? p.dosage : (oldMed.dosage || '')
-            }));
+            const normalizedExisting = periods
+              .map(p => ({
+                from: p.from || effectiveStart,
+                to: p.to || null,
+                name: p.name || oldMed.name,
+                time: p.time || oldMed.time,
+                dosage: p.dosage !== undefined ? p.dosage : (oldMed.dosage || '')
+              }))
+              .sort((a, b) => (a.from || '').localeCompare(b.from || ''));
 
             let builtPeriods = [];
             if (effectiveModDate > effectiveStart) {
@@ -1366,7 +1249,7 @@
                     return {
                       ...p,
                       from: pFrom,
-                      to: pFrom <= prevDayStr ? prevDayStr : pFrom
+                      to: prevDayStr
                     };
                   }
                   return {
@@ -1375,15 +1258,6 @@
                     to: p.to && p.to <= prevDayStr ? p.to : prevDayStr
                   };
                 });
-
-              if (builtPeriods.length > 0 && builtPeriods[0].dosage === dosage && prevDosageVal !== dosage) {
-                builtPeriods[0] = {
-                  ...builtPeriods[0],
-                  name: prevNameVal,
-                  time: prevTimeVal,
-                  dosage: prevDosageVal
-                };
-              }
 
               if (builtPeriods.length === 0) {
                 builtPeriods.push({
@@ -1403,14 +1277,16 @@
                 dosage
               });
             } else {
+              const futurePeriods = normalizedExisting.filter(p => p.from > effectiveModDate);
               builtPeriods = [
                 {
                   from: effectiveModDate,
-                  to: oldMed.endDate || null,
+                  to: futurePeriods.length > 0 ? addDaysToDateKey(futurePeriods[0].from, -1) : (oldMed.endDate || null),
                   name,
                   time,
                   dosage
-                }
+                },
+                ...futurePeriods
               ];
             }
 
@@ -1513,7 +1389,7 @@
           : [{ from: med.startDate || APP_DEFAULT_START_DATE, to: null, name: med.name, time: med.time, dosage: med.dosage || '' }]
         ).map((p, i, arr) => {
           if (i === arr.length - 1) {
-            return { ...p, to: endDate };
+            return { ...p, to: addDaysToDateKey(endDate, -1) };
           }
           return p;
         });
