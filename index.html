@@ -16,14 +16,12 @@
       background-color: #f8fafc;
       color: #0f172a;
     }
-    /* Ομαλές μεταβάσεις για τα κελιά του ημερολογίου */
     .calendar-day {
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .calendar-day:active {
       transform: scale(0.96);
     }
-    /* Προσαρμοσμένη μπάρα κύλισης */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -38,193 +36,250 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
     }
+
+    /* Στυλ Εκτύπωσης / Αποθήκευσης σε PDF */
+    #printReportContainer {
+      display: none;
+    }
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 14mm;
+        @top-left {
+          content: "";
+        }
+        @top-center {
+          content: none;
+        }
+        @top-right {
+          content: none;
+        }
+        @bottom-left {
+          content: none;
+        }
+        @bottom-center {
+          content: none;
+        }
+        @bottom-right {
+          content: counter(page) " / " counter(pages);
+        }
+      }
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      #appShell,
+      #medModal,
+      #deleteModal,
+      #historyModal,
+      #pdfOptionsModal,
+      #medListPdfModal,
+      #toastContainer {
+        display: none !important;
+      }
+      #printReportContainer {
+        display: block !important;
+        width: 100%;
+      }
+      .print-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased">
 
-  <!-- Επάνω Μπάρα Εφαρμογής & Ενιαίο Κουμπί Ειδοποιήσεων -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-md shadow-teal-600/20 shrink-0">
-          <!-- Εικονίδιο Χαπιού SVG -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
-            <path d="m8.5 8.5 7 7"/>
-          </svg>
-        </div>
-        <div>
-          <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Ημερολόγιο Λήψης Φαρμακευτικής Αγωγής</h1>
-          <p class="text-xs text-slate-500">Καθημερινή παρακολούθηση &amp; υπενθυμίσεις 30' νωρίτερα</p>
-        </div>
-      </div>
-
-      <!-- Έξυπνο Ενιαίο Κουμπί Ειδοποιήσεων -->
-      <div class="flex items-center w-full sm:w-auto justify-end">
-        <button id="notifActionBtn" type="button" onclick="handleNotificationButtonClick()" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white transition shadow-sm flex items-center gap-2 cursor-pointer">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span>Πατήστε για Ενεργοποίηση Ειδοποιήσεων</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Κύριο Περιεχόμενο -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    
-    <!-- Ενημερωτικό πλαίσιο για τις ειδοποιήσεις -->
-    <div id="notifTipBanner" class="mb-6 bg-sky-50 border border-sky-200 rounded-2xl p-3.5 flex items-start sm:items-center justify-between gap-3 text-xs sm:text-sm text-sky-900">
-      <div class="flex items-start sm:items-center gap-2.5">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-sky-600 shrink-0 mt-0.5 sm:mt-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-        <span><strong>Συμβουλή:</strong> Για να λαμβάνετε αυτόματα την ειδοποίηση <strong>30 λεπτά πριν</strong> από κάθε χάπι, αφήστε αυτή την καρτέλα ανοιχτή (ή καρφιτσωμένη) στον browser σας.</span>
-      </div>
-      <button type="button" onclick="document.getElementById('notifTipBanner').classList.add('hidden')" class="text-sky-600 hover:text-sky-800 p-1 rounded-lg hover:bg-sky-100 shrink-0 cursor-pointer" aria-label="Κλείσιμο">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      
-      <!-- ΑΡΙΣΤΕΡΗ ΣΤΗΛΗ: Μηνιαίο Ημερολόγιο (7 στήλες σε μεγάλες οθόνες) -->
-      <section class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
-        <!-- Πλοήγηση Μήνα -->
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+  <div id="appShell" class="min-h-screen flex flex-col">
+    <!-- Επάνω Μπάρα Εφαρμογής -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-md shadow-teal-600/20 shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+              <path d="m8.5 8.5 7 7"/>
+            </svg>
+          </div>
           <div>
-            <h2 id="currentMonthYear" class="text-xl sm:text-2xl font-extrabold text-slate-900 capitalize">Νοέμβριος 2026</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Πατήστε σε μια ημερομηνία για έλεγχο των χαπιών της</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button type="button" onclick="changeMonth(-1)" class="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer" title="Προηγούμενος μήνας">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-            <button type="button" onclick="goToToday()" class="px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-xs sm:text-sm font-semibold text-slate-700 transition cursor-pointer">
-              Σήμερα
-            </button>
-            <button type="button" onclick="changeMonth(1)" class="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer" title="Επόμενος μήνας">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
+            <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Ημερολόγιο Λήψης Φαρμακευτικής Αγωγής</h1>
+            <p class="text-xs text-slate-500">Καθημερινή παρακολούθηση & ιστορικό φαρμακευτικής αγωγής</p>
           </div>
         </div>
-
-        <!-- Επικεφαλίδες Ημερών Εβδομάδας (Ξεκινάει από Δευτέρα) -->
-        <div class="grid grid-cols-7 gap-1.5 sm:gap-2 text-center mb-2">
-          <div class="text-xs font-bold text-slate-500 uppercase py-1">Δευ</div>
-          <div class="text-xs font-bold text-slate-500 uppercase py-1">Τρι</div>
-          <div class="text-xs font-bold text-slate-500 uppercase py-1">Τετ</div>
-          <div class="text-xs font-bold text-slate-500 uppercase py-1">Πεμ</div>
-          <div class="text-xs font-bold text-slate-500 uppercase py-1">Παρ</div>
-          <div class="text-xs font-bold text-slate-500 uppercase py-1">Σαβ</div>
-          <div class="text-xs font-bold text-slate-500 uppercase py-1">Κυρ</div>
-        </div>
-
-        <!-- Πλέγμα Ημερών -->
-        <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2">
-          <!-- Τα κελιά δημιουργούνται δυναμικά από JavaScript -->
-        </div>
-
-        <!-- Υπόμνημα Χρωμάτων -->
-        <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
-          <div class="flex flex-wrap items-center gap-4">
-            <div class="flex items-center gap-2">
-              <span class="w-4 h-4 rounded-md bg-emerald-100 border-2 border-emerald-500 inline-block"></span>
-              <span class="font-medium text-emerald-900">Όλα τα χάπια λήφθηκαν</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-4 h-4 rounded-md bg-rose-100 border-2 border-rose-400 inline-block"></span>
-              <span class="font-medium text-rose-900">Εκκρεμούν χάπια</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-4 h-4 rounded-md bg-slate-100 border border-slate-300 inline-block"></span>
-              <span>Χωρίς καταχωρημένα χάπια</span>
-            </div>
-          </div>
-          <div class="text-slate-400 italic">
-            * Κλικ σε ημέρα για επιλογή
-          </div>
-        </div>
-      </section>
-
-      <!-- ΔΕΞΙΑ ΣΤΗΛΗ: Λίστα Επιλεγμένης Ημέρας & Διαχείριση Χαπιών (5 στήλες) -->
-      <div class="lg:col-span-5 flex flex-col gap-6">
-        
-        <!-- ΚΑΡΤΑ 1: Χάπια Επιλεγμένης Ημερομηνίας (Checklist) -->
-        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
-          <div class="flex items-center justify-between gap-2 pb-4 border-b border-slate-100">
-            <div>
-              <span class="text-xs font-semibold uppercase tracking-wider text-teal-600">Επιλεγμένη Ημερομηνία</span>
-              <h3 id="selectedDateHeading" class="text-lg sm:text-xl font-bold text-slate-900 mt-0.5">Παρασκευή, 20 Νοεμβρίου 2026</h3>
-            </div>
-            <div id="dayStatusPill" class="px-3 py-1.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 shrink-0">
-              0 / 0
-            </div>
-          </div>
-
-          <!-- Μπάρα Προόδου Ημέρας -->
-          <div class="mt-4 mb-4">
-            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-              <div id="dayProgressBar" class="bg-rose-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
-            </div>
-          </div>
-
-          <!-- Λίστα Χαπιών προς Τσεκάρισμα -->
-          <div id="dailyChecklist" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-            <!-- Δυναμικό περιεχόμενο -->
-          </div>
-        </section>
-
-        <!-- ΚΑΡΤΑ 2: Διαχείριση Καθημερινής Αγωγής (Προσθήκη / Τροποποίηση / Backup) -->
-        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
-          <div class="flex items-center justify-between gap-2 mb-4">
-            <div>
-              <h3 class="text-lg font-bold text-slate-900">Τα Καθημερινά μου Χάπια</h3>
-              <p class="text-xs text-slate-500">Προσθέστε ή τροποποιήστε τα φάρμακα και τις ώρες τους</p>
-            </div>
-            <button type="button" onclick="openMedModal()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-              <span>Νέο Χάπι</span>
-            </button>
-          </div>
-
-          <!-- Λίστα Ορισμένων Φαρμάκων -->
-          <div id="medicationsList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-            <!-- Δυναμικό περιεχόμενο -->
-          </div>
-
-          <!-- Ενότητα Αντιγράφων Ασφαλείας (Backup JSON Εξαγωγή / Εισαγωγή) -->
-          <div class="mt-5 pt-4 border-t border-slate-100">
-            <div class="flex items-center justify-between mb-2.5">
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Αντίγραφα Ασφαλείας (JSON)</span>
-            </div>
-            <div class="grid grid-cols-2 gap-2.5">
-              <button type="button" onclick="exportBackupJson()" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-800 border border-slate-200/80 text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2 cursor-pointer" title="Λήψη αντιγράφου ασφαλείας σε αρχείο JSON">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-teal-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" x2="12" y1="15" y2="3"/>
-                </svg>
-                <span>Εξαγωγή Backup</span>
-              </button>
-
-              <button type="button" onclick="triggerImportBackup()" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-800 border border-slate-200/80 text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2 cursor-pointer" title="Επαναφορά δεδομένων από αρχείο JSON">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-sky-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="17 8 12 3 7 8"/>
-                  <line x1="12" x2="12" y1="3" y2="15"/>
-                </svg>
-                <span>Εισαγωγή Backup</span>
-              </button>
-
-              <!-- Κρυφό πεδίο επιλογής αρχείου JSON -->
-              <input type="file" id="importBackupInput" accept=".json,application/json" class="hidden" onchange="handleImportBackupFile(event)" />
-            </div>
-          </div>
-        </section>
-
       </div>
-    </div>
-  </main>
+    </header>
 
-  <!-- MODAL: Προσθήκη / Τροποποίηση Χαπιού -->
+    <!-- Κύριο Περιεχόμενο -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- ΑΡΙΣΤΕΡΗ ΣΤΗΛΗ: Μηνιαίο Ημερολόγιο -->
+        <section class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div>
+              <h2 id="currentMonthYear" class="text-xl sm:text-2xl font-extrabold text-slate-900 capitalize">Νοέμβριος 2026</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Πατήστε σε μια ημερομηνία για έλεγχο των χαπιών της</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="changeMonth(-1)" class="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer" title="Προηγούμενος μήνας">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+              <button type="button" onclick="goToToday()" class="px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-xs sm:text-sm font-semibold text-slate-700 transition cursor-pointer">
+                Σήμερα
+              </button>
+              <button type="button" onclick="changeMonth(1)" class="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer" title="Επόμενος μήνας">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-7 gap-1.5 sm:gap-2 text-center mb-2">
+            <div class="text-xs font-bold text-slate-500 uppercase py-1">Δευ</div>
+            <div class="text-xs font-bold text-slate-500 uppercase py-1">Τρι</div>
+            <div class="text-xs font-bold text-slate-500 uppercase py-1">Τετ</div>
+            <div class="text-xs font-bold text-slate-500 uppercase py-1">Πεμ</div>
+            <div class="text-xs font-bold text-slate-500 uppercase py-1">Παρ</div>
+            <div class="text-xs font-bold text-slate-500 uppercase py-1">Σαβ</div>
+            <div class="text-xs font-bold text-slate-500 uppercase py-1">Κυρ</div>
+          </div>
+
+          <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2"></div>
+
+          <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
+            <div class="flex flex-wrap items-center gap-4">
+              <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded-md bg-emerald-100 border-2 border-emerald-500 inline-block"></span>
+                <span class="font-medium text-emerald-900">Όλα τα χάπια λήφθηκαν</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded-md bg-rose-100 border-2 border-rose-400 inline-block"></span>
+                <span class="font-medium text-rose-900">Εκκρεμούν χάπια</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded-md bg-slate-100 border border-slate-300 inline-block"></span>
+                <span>Χωρίς καταχωρημένα χάπια</span>
+              </div>
+            </div>
+            <div class="text-slate-400 italic">
+              * Κλικ σε ημέρα για επιλογή
+            </div>
+          </div>
+        </section>
+
+        <!-- ΔΕΞΙΑ ΣΤΗΛΗ: Λίστα Επιλεγμένης Ημέρας & Διαχείριση Χαπιών -->
+        <div class="lg:col-span-5 flex flex-col gap-6">
+          
+          <!-- ΚΑΡΤΑ 1: Χάπια Επιλεγμένης Ημερομηνίας (Checklist) -->
+          <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+            <div class="flex items-center justify-between gap-2 pb-4 border-b border-slate-100">
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-teal-600">Επιλεγμένη Ημερομηνία</span>
+                <h3 id="selectedDateHeading" class="text-lg sm:text-xl font-bold text-slate-900 mt-0.5">Σάββατο, 21 Νοεμβρίου 2026</h3>
+              </div>
+              <div id="dayStatusPill" class="px-3 py-1.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 shrink-0">
+                0 / 0
+              </div>
+            </div>
+
+            <div class="mt-4 mb-4">
+              <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                <div id="dayProgressBar" class="bg-rose-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <div id="dailyChecklist" class="space-y-2.5 max-h-80 overflow-y-auto pr-1"></div>
+          </section>
+
+          <!-- ΚΑΡΤΑ 2: Διαχείριση Καθημερινής Αγωγής -->
+          <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900">Τα Καθημερινά μου Χάπια</h3>
+                <p class="text-xs text-slate-500">Διαχείριση φαρμάκων, ιστορικού & αναφορών</p>
+              </div>
+              <button type="button" onclick="openMedModal()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                <span>Νέο Χάπι</span>
+              </button>
+            </div>
+
+            <!-- Φίλτρο Ενεργών / Διαγραμμένων -->
+            <div class="flex items-center justify-between gap-2 mb-3 bg-slate-50 p-1.5 rounded-xl border border-slate-200/70">
+              <div class="flex items-center gap-1">
+                <button type="button" id="filterActiveBtn" onclick="setMedListFilter('active')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer">
+                  Ενεργά (<span id="activeCountBadge">0</span>)
+                </button>
+                <button type="button" id="filterAllBtn" onclick="setMedListFilter('all')" class="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer">
+                  Όλα (<span id="allCountBadge">0</span>)
+                </button>
+              </div>
+              <span class="text-[11px] text-slate-400 pr-1">Πατήστε το ρολόι για ιστορικό</span>
+            </div>
+
+            <!-- Λίστα Φαρμάκων -->
+            <div id="medicationsList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+
+            <!-- Αναφορές PDF & Αντίγραφα Ασφαλείας -->
+            <div class="mt-5 pt-4 border-t border-slate-100 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Αναφορές & Αντίγραφα Ασφαλείας</span>
+              </div>
+
+              <!-- Κουμπί Έκδοσης PDF Λίστας Φαρμάκων με φίλτρο ημερομηνίας -->
+              <button type="button" onclick="openMedListPdfModal()" class="w-full px-3.5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white border border-teal-600 text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer" title="Έκδοση PDF μόνο με τη λίστα των φαρμάκων για συγκεκριμένη ημερομηνία">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>Έκδοση Λίστας Φαρμάκων</span>
+              </button>
+
+              <!-- Κουμπί Έκδοσης PDF Ιστορικού Φαρμάκων -->
+              <button type="button" onclick="openPdfOptionsModal()" class="w-full px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-600 text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer" title="Δημιουργία εκτυπώσιμου PDF με το ιστορικό φαρμάκων και αλλαγών">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                <span>Έκδοση Ιστορικού Φαρμάκων</span>
+              </button>
+
+              <!-- Κουμπιά JSON Backup -->
+              <div class="grid grid-cols-2 gap-2.5">
+                <button type="button" onclick="exportBackupJson()" class="w-full px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-600 text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer" title="Λήψη αντιγράφου ασφαλείας σε αρχείο JSON">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" x2="12" y1="15" y2="3"/>
+                  </svg>
+                  <span>Εξαγωγή Backup</span>
+                </button>
+
+                <button type="button" onclick="triggerImportBackup()" class="w-full px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-600 text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer" title="Επαναφορά δεδομένων από αρχείο JSON">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" x2="12" y1="3" y2="15"/>
+                  </svg>
+                  <span>Εισαγωγή Backup</span>
+                </button>
+
+                <input type="file" id="importBackupInput" accept=".json,application/json" class="hidden" onchange="handleImportBackupFile(event)" />
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL 1: Προσθήκη / Τροποποίηση Χαπιού -->
   <div id="medModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
     <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
       <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -248,14 +303,20 @@
             <input type="time" id="medTime" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm" />
           </div>
           <div>
-            <label for="medDosage" class="block text-sm font-semibold text-slate-700 mb-1">Δοσολογία / Σχόλιο</label>
-            <input type="text" id="medDosage" placeholder="π.χ. 1 δισκίο μετά το φαγητό" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm" />
+            <label for="medStartDate" id="medDateLabel" class="block text-sm font-semibold text-slate-700 mb-1">Ημερομηνία Έναρξης *</label>
+            <input type="date" id="medStartDate" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm" />
           </div>
         </div>
 
-        <div class="bg-teal-50 border border-teal-100 rounded-xl p-3 text-xs text-teal-800 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-teal-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span>Θα λαμβάνετε ειδοποίηση <strong>30 λεπτά νωρίτερα</strong> από την επιλεγμένη ώρα.</span>
+        <div>
+          <label for="medDosage" class="block text-sm font-semibold text-slate-700 mb-1">Δοσολογία / Οδηγίες</label>
+          <input type="text" id="medDosage" placeholder="π.χ. 1 δισκίο μετά το φαγητό" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm" />
+        </div>
+
+        <!-- Πεδίο Σχολίου (για νέα εισαγωγή ή για αιτία τροποποίησης) -->
+        <div>
+          <label for="medComment" id="medCommentLabel" class="block text-sm font-semibold text-slate-700 mb-1">Σχόλιο / Σημείωση (προαιρετικό)</label>
+          <textarea id="medComment" rows="2" placeholder="π.χ. Οδηγία καρδιολόγου, αλλαγή ώρας λήψης..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm resize-none"></textarea>
         </div>
 
         <div class="pt-2 flex items-center justify-end gap-2.5">
@@ -270,26 +331,196 @@
     </div>
   </div>
 
-  <!-- MODAL ΕΠΙΒΕΒΑΙΩΣΗΣ ΔΙΑΓΡΑΦΗΣ -->
+  <!-- MODAL 2: Επιβεβαίωση Διακοπής / Διαγραφής Χαπιού με Σχόλιο & Ημερομηνία -->
   <div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-sm p-6 text-center">
-      <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-11 h-11 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        </div>
+        <div>
+          <h4 class="text-lg font-bold text-slate-900">Διακοπή / Διαγραφή Χαπιού</h4>
+          <p id="deleteModalText" class="text-xs text-slate-500 mt-0.5">Το χάπι θα μεταφερθεί στο ιστορικό με καταληκτική ημερομηνία.</p>
+        </div>
       </div>
-      <h4 class="text-lg font-bold text-slate-900">Διαγραφή Χαπιού;</h4>
-      <p id="deleteModalText" class="text-sm text-slate-500 mt-1 mb-5">Είστε σίγουροι ότι θέλετε να αφαιρέσετε αυτό το χάπι από την καθημερινή σας λίστα;</p>
-      <div class="flex items-center justify-center gap-3">
-        <button type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer">
+
+      <div class="space-y-3 mt-4 mb-5">
+        <div>
+          <label for="deleteEndDate" class="block text-xs font-semibold text-slate-700 mb-1">Καταληκτική Ημερομηνία Λήψης *</label>
+          <input type="date" id="deleteEndDate" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm" />
+          <p class="text-[11px] text-slate-400 mt-1">Από την επόμενη ημέρα δεν θα ζητείται στο καθημερινό ημερολόγιο.</p>
+        </div>
+        <div>
+          <label for="deleteComment" class="block text-xs font-semibold text-slate-700 mb-1">Σχόλιο / Αιτία διακοπής (προαιρετικό)</label>
+          <textarea id="deleteComment" rows="2" placeholder="π.χ. Ολοκλήρωση αγωγής, αντικατάσταση από άλλο φάρμακο..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-sm resize-none"></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5">
+        <button type="button" onclick="closeDeleteModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer">
           Άκυρο
         </button>
-        <button type="button" id="confirmDeleteBtn" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white transition cursor-pointer">
-          Διαγραφή
+        <button type="button" id="confirmDeleteBtn" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white transition cursor-pointer">
+          Επιβεβαίωση Διαγραφής
         </button>
       </div>
     </div>
   </div>
 
-  <!-- TOAST ΕΙΔΟΠΟΙΗΣΗΣ ΕΝΤΟΣ ΕΦΑΡΜΟΓΗΣ -->
+  <!-- MODAL 3: Προβολή Ιστορικού Φαρμάκου -->
+  <div id="historyModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-bold uppercase tracking-wider text-teal-600">Ιστορικό Αγωγής</span>
+          <h3 id="historyModalTitle" class="text-lg font-bold text-slate-900">Όνομα Φαρμάκου</h3>
+        </div>
+        <button type="button" onclick="closeHistoryModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <div id="historyModalBody" class="p-6 max-h-[70vh] overflow-y-auto space-y-4"></div>
+      <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end">
+        <button type="button" onclick="closeHistoryModal()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 transition cursor-pointer">
+          Κλείσιμο
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: Επιλογές Έκδοσης PDF Ιστορικού -->
+  <div id="pdfOptionsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Έκδοση Ιστορικού Φαρμάκων</h3>
+            <p class="text-xs text-slate-500">Επιλέξτε τι θα περιλαμβάνει το έγγραφο</p>
+          </div>
+        </div>
+        <button type="button" onclick="closePdfOptionsModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-bold text-slate-800 mb-2">Ποια φάρμακα να συμπεριληφθούν;</label>
+          <div class="space-y-2">
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+              <input type="radio" name="pdfScope" value="all" checked class="mt-0.5 accent-teal-600" />
+              <div>
+                <div class="text-sm font-semibold text-slate-900">Όλα τα φάρμακα (Ενεργά & Διαγραμμένα)</div>
+                <div class="text-xs text-slate-500">Πλήρης εικόνα της αγωγής μαζί με όσα έχουν διακοπεί</div>
+              </div>
+            </label>
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+              <input type="radio" name="pdfScope" value="active" class="mt-0.5 accent-teal-600" />
+              <div>
+                <div class="text-sm font-semibold text-slate-900">Μόνο τα ενεργά φάρμακα</div>
+                <div class="text-xs text-slate-500">Τα χάπια που λαμβάνετε καθημερινά σήμερα</div>
+              </div>
+            </label>
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+              <input type="radio" name="pdfScope" value="discontinued" class="mt-0.5 accent-teal-600" />
+              <div>
+                <div class="text-sm font-semibold text-slate-900">Μόνο τα διαγραμμένα / διακοπείσες αγωγές</div>
+                <div class="text-xs text-slate-500">Ιστορικό φαρμάκων που έχουν σταματήσει</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="pt-1 space-y-2.5 border-t border-slate-100">
+          <label class="flex items-center gap-2.5 cursor-pointer pt-2">
+            <input type="checkbox" id="pdfIncludeHistory" checked class="w-4 h-4 rounded accent-teal-600" />
+            <span class="text-sm font-medium text-slate-800">Συμπερίληψη ιστορικού τροποποιήσεων & σχολίων</span>
+          </label>
+          <label class="flex items-center gap-2.5 cursor-pointer">
+            <input type="checkbox" id="pdfIncludeAdherence" checked class="w-4 h-4 rounded accent-teal-600" />
+            <span class="text-sm font-medium text-slate-800">Συμπερίληψη σύνοψης λήψεων ημερολογίου</span>
+          </label>
+        </div>
+
+        <div>
+          <label for="pdfGeneralNote" class="block text-xs font-semibold text-slate-700 mb-1">Γενική σημείωση στην κορυφή του PDF (προαιρετικό)</label>
+          <input type="text" id="pdfGeneralNote" placeholder="π.χ. Ασθενής: Ι. Παπαδόπουλος / Επίσκεψη Καρδιολόγου" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm" />
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200/80 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
+          <strong>Συμβουλή:</strong> Στο παράθυρο εκτύπωσης που θα ανοίξει, επιλέξτε προορισμό <strong>«Αποθήκευση ως PDF» (Save as PDF)</strong> για άμεση λήψη με άψογα Ελληνικά.
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="closePdfOptionsModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+            Ακύρωση
+          </button>
+          <button type="button" onclick="generateAndPrintPdf()" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            <span>Δημιουργία PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: Έκδοση PDF Λίστας Φαρμάκων με Φίλτρο Συγκεκριμένης Ημερομηνίας -->
+  <div id="medListPdfModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Έκδοση Λίστας Φαρμάκων</h3>
+            <p class="text-xs text-slate-500">Λίστα φαρμάκων για συγκεκριμένη ημερομηνία</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeMedListPdfModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div>
+          <label for="medListFilterDate" class="block text-sm font-bold text-slate-800 mb-1.5">Επιλογή Ημερομηνίας *</label>
+          <input type="date" id="medListFilterDate" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm" />
+          <p class="text-xs text-slate-500 mt-1">Θα εκδοθεί PDF μόνο με τη λίστα των φαρμάκων που ίσχυαν την επιλεγμένη ημερομηνία.</p>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200/80 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
+          <strong>Συμβουλή:</strong> Στο παράθυρο εκτύπωσης που θα ανοίξει, επιλέξτε προορισμό <strong>«Αποθήκευση ως PDF» (Save as PDF)</strong>.
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="closeMedListPdfModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+            Ακύρωση
+          </button>
+          <button type="button" onclick="generateMedListPdfForDate()" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            <span>Δημιουργία PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ΠΕΡΙΟΧΗ ΕΚΤΥΠΩΣΗΣ / PDF (Ορατή μόνο κατά την έκδοση PDF) -->
+  <div id="printReportContainer"></div>
+
+  <!-- TOAST ΜΗΝΥΜΑ ΕΝΤΟΣ ΕΦΑΡΜΟΓΗΣ -->
   <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
   <script>
@@ -300,10 +531,10 @@
      */
     const STORAGE_KEYS = {
       MEDS: 'pill_tracker_medications_v1',
-      LOGS: 'pill_tracker_logs_v1',
-      NOTIFIED: 'pill_tracker_notified_v1',
-      NOTIF_ENABLED: 'pill_tracker_notif_enabled_v1'
+      LOGS: 'pill_tracker_logs_v1'
     };
+
+    const APP_DEFAULT_START_DATE = '2026-11-20';
 
     const GREEK_MONTHS = [
       'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος',
@@ -320,8 +551,8 @@
     ];
 
     let medications = [];
-    let dailyLogs = {}; // Μορφή: { "YYYY-MM-DD": ["medId1", "medId2"] }
-    let notifiedToday = {}; // Μορφή: { "YYYY-MM-DD_medId_HH:MM": true }
+    let dailyLogs = {};
+    let medListFilter = 'active'; // 'active' | 'all'
 
     const todayObj = new Date();
     let currentViewYear = todayObj.getFullYear();
@@ -331,7 +562,7 @@
 
     /**
      * ============================================================================
-     * ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ ΗΜΕΡΟΜΗΝΙΑΣ & ΑΠΟΘΗΚΕΥΣΗΣ
+     * ΒΟΗΘΗΤΙΚΕΣ ΣΥΝΑΡΤΗΣΕΙΣ ΗΜΕΡΟΜΗΝΙΑΣ, ΚΑΝΟΝΙΚΟΠΟΙΗΣΗΣ & ΑΠΟΘΗΚΕΥΣΗΣ
      * ============================================================================
      */
     function formatDateKey(date) {
@@ -341,6 +572,12 @@
       return `${y}-${m}-${d}`;
     }
 
+    function formatGreekDateShort(dateStr) {
+      if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr || '-';
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+    }
+
     function formatGreekDateFull(dateStr) {
       const [y, m, d] = dateStr.split('-').map(Number);
       const date = new Date(y, m - 1, d);
@@ -348,31 +585,319 @@
       return `${dayName}, ${d} ${GREEK_MONTHS_GENITIVE[m - 1]} ${y}`;
     }
 
-    function calculateReminderTime(timeStr, minutesBefore = 30) {
-      const [h, m] = timeStr.split(':').map(Number);
-      let totalMinutes = h * 60 + m - minutesBefore;
-      if (totalMinutes < 0) totalMinutes += 24 * 60;
-      const remH = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
-      const remM = String(totalMinutes % 60).padStart(2, '0');
-      return `${remH}:${remM}`;
+    function inferStartDateFromId(medId, fallbackDate) {
+      if (typeof medId === 'string' && medId.startsWith('med_')) {
+        const ts = Number(medId.replace('med_', ''));
+        if (!Number.isNaN(ts) && ts > 1577836800000 && ts < 4102444800000) {
+          return formatDateKey(new Date(ts));
+        }
+      }
+      return fallbackDate || APP_DEFAULT_START_DATE;
+    }
+
+    function addDaysToDateKey(dateStr, deltaDays) {
+      if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d + deltaDays);
+      return formatDateKey(dt);
+    }
+
+    function convertThreeToTwoDosage(val) {
+      if (typeof val !== 'string') return val;
+      const trimmed = val.trim();
+      if (!trimmed) return val;
+      const lower = trimmed.toLowerCase();
+      if (lower.startsWith('3 δισκία')) {
+        return '2 Δισκία' + trimmed.slice('3 δισκία'.length);
+      }
+      if (lower.startsWith('3 δισκίο')) {
+        return '2 Δισκίο' + trimmed.slice('3 δισκίο'.length);
+      }
+      if (trimmed.startsWith('3 ')) {
+        return '2 ' + trimmed.slice(2);
+      }
+      return val;
+    }
+
+    function normalizeMedication(med, fallbackDate) {
+      const rawStartDate = med.startDate && /^\d{4}-\d{2}-\d{2}$/.test(med.startDate)
+        ? med.startDate
+        : inferStartDateFromId(med.id, fallbackDate);
+      const historyDates = Array.isArray(med.history)
+        ? med.history.map(h => h && h.date).filter(Boolean).sort()
+        : [];
+      const earliestHistDate = historyDates.length > 0 ? historyDates[0] : null;
+      const startDate = (earliestHistDate && earliestHistDate < rawStartDate) ? earliestHistDate : rawStartDate;
+
+      const endDate = med.endDate && /^\d{4}-\d{2}-\d{2}$/.test(med.endDate)
+        ? med.endDate
+        : null;
+
+      const history = Array.isArray(med.history) && med.history.length > 0
+        ? med.history.map(ev => {
+            if (ev && ev.type === 'modified' && typeof ev.summary === 'string') {
+              const cleanedSummary = ev.summary
+                .replace(/Όνομα:\s*«[^»]*»\s*→\s*«([^»]*)»/g, 'Όνομα: «$1»')
+                .replace(/Ώρα:\s*[^\s|]+\s*→\s*([^\s|]+)/g, 'Ώρα: $1')
+                .replace(/Δοσολογία:\s*«[^»]*»\s*→\s*«([^»]*)»/g, 'Δοσολογία: «$1»')
+                .replace(/Ημ\/νία έναρξης:\s*[^\s|]+\s*→\s*([^\s|]+)/g, 'Ημ/νία έναρξης: $1');
+              return { ...ev, summary: cleanedSummary };
+            }
+            return ev;
+          })
+        : [
+            {
+              type: 'created',
+              date: startDate,
+              timestamp: `${startDate}T00:00:00`,
+              summary: `Αρχική καταχώρηση: ${med.name} (${med.time}${med.dosage ? ', ' + med.dosage : ''})`,
+              comment: med.initialComment || ''
+            }
+          ];
+
+      let periods = Array.isArray(med.periods) && med.periods.length > 0
+        ? med.periods.map(p => ({
+            from: p.from || startDate,
+            to: p.to || null,
+            name: p.name || med.name,
+            time: p.time || med.time,
+            dosage: p.dosage !== undefined ? p.dosage : (med.dosage || '')
+          }))
+        : [
+            {
+              from: startDate,
+              to: endDate,
+              name: med.name,
+              time: med.time,
+              dosage: med.dosage || ''
+            }
+          ];
+
+      if (periods.length === 1 && Array.isArray(med.history)) {
+        const modEv = [...med.history].reverse().find(h => h && h.type === 'modified' && h.date && h.date > startDate && typeof h.summary === 'string');
+        if (modEv) {
+          const prevDay = addDaysToDateKey(modEv.date, -1);
+          if (prevDay >= startDate) {
+            const dosMatch = modEv.summary.match(/Δοσολογία:\s*«([^»]*)»/);
+            const timeMatch = modEv.summary.match(/Ώρα:\s*([^\s|]+)/);
+            const nameMatch = modEv.summary.match(/Όνομα:\s*«([^»]*)»/);
+            const oldDosage = dosMatch ? (med.dosage || '') : (med.dosage || '');
+            const oldTime = timeMatch ? med.time : med.time;
+            const oldName = nameMatch ? med.name : med.name;
+            periods = [
+              {
+                from: startDate,
+                to: prevDay,
+                name: oldName,
+                time: oldTime,
+                dosage: oldDosage
+              },
+              {
+                from: modEv.date,
+                to: endDate,
+                name: med.name,
+                time: med.time,
+                dosage: med.dosage || ''
+              }
+            ];
+          }
+        }
+      }
+
+      if (Array.isArray(history) && periods.length > 0) {
+        const modEvents = history.filter(h => h && h.type === 'modified' && h.date);
+        if (modEvents.length > 0) {
+          const firstMod = [...modEvents].sort((a, b) => (a.date || '').localeCompare(b.date || ''))[0];
+          const prevDay = addDaysToDateKey(firstMod.date, -1);
+          if (prevDay >= startDate) {
+            let priorDosage = periods[0].dosage !== undefined ? periods[0].dosage : (med.dosage || '');
+            let priorTime = periods[0].time || med.time;
+            let priorName = periods[0].name || med.name;
+
+            if (firstMod.prevSnapshot && firstMod.prevSnapshot.dosage !== undefined) {
+              priorDosage = firstMod.prevSnapshot.dosage;
+              priorTime = firstMod.prevSnapshot.time || priorTime;
+              priorName = firstMod.prevSnapshot.name || priorName;
+            } else {
+              priorDosage = convertThreeToTwoDosage(priorDosage);
+            }
+
+            if (periods.length === 1) {
+              periods = [
+                {
+                  from: startDate,
+                  to: prevDay,
+                  name: priorName,
+                  time: priorTime,
+                  dosage: priorDosage
+                },
+                {
+                  from: firstMod.date,
+                  to: endDate,
+                  name: med.name,
+                  time: med.time,
+                  dosage: med.dosage || ''
+                }
+              ];
+            } else if (periods[0].dosage === (med.dosage || '') && priorDosage !== (med.dosage || '')) {
+              periods[0] = {
+                ...periods[0],
+                to: periods[0].to || prevDay,
+                name: priorName,
+                time: priorTime,
+                dosage: priorDosage
+              };
+            }
+          }
+        }
+      }
+
+      return {
+        id: med.id,
+        name: med.name,
+        time: med.time,
+        dosage: med.dosage || '',
+        startDate,
+        endDate,
+        endComment: med.endComment || '',
+        periods,
+        history
+      };
+    }
+
+    function getMedicationSnapshotForDate(med, dateStr) {
+      const periods = Array.isArray(med.periods) && med.periods.length > 0
+        ? [...med.periods].sort((a, b) => (a.from || '').localeCompare(b.from || ''))
+        : [{ from: med.startDate || APP_DEFAULT_START_DATE, to: med.endDate || null, name: med.name, time: med.time, dosage: med.dosage || '' }];
+
+      for (let i = 0; i < periods.length; i++) {
+        const p = periods[i];
+        const pFrom = p.from || med.startDate || APP_DEFAULT_START_DATE;
+        const nextFrom = (i + 1 < periods.length && periods[i + 1].from) ? addDaysToDateKey(periods[i + 1].from, -1) : null;
+        const pTo = p.to || nextFrom || med.endDate || null;
+        if (dateStr >= pFrom && (!pTo || dateStr <= pTo)) {
+          let dVal = p.dosage !== undefined ? p.dosage : (med.dosage || '');
+          let nVal = p.name || med.name;
+          let tVal = p.time || med.time;
+          if (Array.isArray(med.history)) {
+            const laterMods = med.history
+              .filter(h => h && h.type === 'modified' && h.date && dateStr < h.date)
+              .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+            if (laterMods.length > 0) {
+              const nextMod = laterMods[0];
+              if (nextMod.prevSnapshot) {
+                if (nextMod.prevSnapshot.name) nVal = nextMod.prevSnapshot.name;
+                if (nextMod.prevSnapshot.time) tVal = nextMod.prevSnapshot.time;
+                if (nextMod.prevSnapshot.dosage !== undefined && nextMod.prevSnapshot.dosage !== '') {
+                  dVal = nextMod.prevSnapshot.dosage;
+                }
+              }
+              dVal = convertThreeToTwoDosage(dVal);
+            }
+          }
+          if (i === 0 && periods.length > 1 && dVal === (med.dosage || '')) {
+            dVal = convertThreeToTwoDosage(dVal);
+          }
+          return {
+            name: nVal,
+            time: tVal,
+            dosage: dVal
+          };
+        }
+      }
+
+      if (dateStr < (periods[0].from || med.startDate || APP_DEFAULT_START_DATE)) {
+        const firstP = periods[0];
+        let earlyDosage = firstP.dosage !== undefined ? firstP.dosage : (med.dosage || '');
+        earlyDosage = convertThreeToTwoDosage(earlyDosage);
+        return {
+          name: firstP.name || med.name,
+          time: firstP.time || med.time,
+          dosage: earlyDosage
+        };
+      }
+
+      if (periods.length >= 2) {
+        const secondP = periods[1];
+        if (secondP && secondP.from && dateStr < secondP.from) {
+          const firstP = periods[0];
+          return {
+            name: firstP.name || med.name,
+            time: firstP.time || med.time,
+            dosage: firstP.dosage !== undefined ? firstP.dosage : (med.dosage || '')
+          };
+        }
+      }
+
+      let snapName = med.name;
+      let snapTime = med.time;
+      let snapDosage = med.dosage || '';
+
+      if (Array.isArray(med.history)) {
+        const laterMods = med.history
+          .filter(h => h && h.type === 'modified' && h.date && dateStr < h.date)
+          .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+        if (laterMods.length > 0) {
+          const nextMod = laterMods[0];
+          if (nextMod.prevSnapshot) {
+            if (nextMod.prevSnapshot.name) snapName = nextMod.prevSnapshot.name;
+            if (nextMod.prevSnapshot.time) snapTime = nextMod.prevSnapshot.time;
+            if (nextMod.prevSnapshot.dosage !== undefined && nextMod.prevSnapshot.dosage !== '') {
+              snapDosage = nextMod.prevSnapshot.dosage;
+            }
+          }
+          snapDosage = convertThreeToTwoDosage(snapDosage);
+        }
+      }
+
+      return {
+        name: snapName,
+        time: snapTime,
+        dosage: snapDosage
+      };
+    }
+
+    function isMedicationActiveOnDate(med, dateStr) {
+      let effectiveStart = med.startDate || APP_DEFAULT_START_DATE;
+
+      const periods = Array.isArray(med.periods) ? med.periods : [];
+      const earliestPeriodFrom = periods
+        .map(p => p && p.from)
+        .filter(Boolean)
+        .sort()[0];
+
+      const hasEarlierPeriod = earliestPeriodFrom && earliestPeriodFrom < effectiveStart;
+      const modEvents = Array.isArray(med.history)
+        ? med.history.filter(h => h && h.type === 'modified' && h.date)
+        : [];
+      const earliestModDate = modEvents
+        .map(h => h.date)
+        .sort()[0];
+
+      if (hasEarlierPeriod) {
+        effectiveStart = earliestPeriodFrom;
+      } else if (earliestModDate && effectiveStart >= earliestModDate) {
+        effectiveStart = APP_DEFAULT_START_DATE;
+      }
+
+      if (dateStr < effectiveStart) return false;
+      if (med.endDate && dateStr > med.endDate) return false;
+      return true;
     }
 
     function loadFromStorage() {
       try {
         const savedMeds = localStorage.getItem(STORAGE_KEYS.MEDS);
         const savedLogs = localStorage.getItem(STORAGE_KEYS.LOGS);
-        const savedNotified = localStorage.getItem(STORAGE_KEYS.NOTIFIED);
 
-        medications = savedMeds ? JSON.parse(savedMeds) : [];
+        const rawMeds = savedMeds ? JSON.parse(savedMeds) : null;
         dailyLogs = savedLogs ? JSON.parse(savedLogs) : {};
-        notifiedToday = savedNotified ? JSON.parse(savedNotified) : {};
 
-        // Προσθήκη 2 ενδεικτικών χαπιών την πρώτη φορά
-        if (!savedMeds) {
-          medications = [
-            { id: 'demo-1', name: 'Πρωινό Χάπι / Βιταμίνη', time: '09:00', dosage: '1 δισκίο με νερό' },
-            { id: 'demo-2', name: 'Βραδινό Χάπι', time: '21:00', dosage: '1 δισκίο μετά το δείπνο' }
-          ];
+        if (!rawMeds) {
+          medications = [];
+          saveMedsToStorage();
+        } else {
+          medications = rawMeds.map(m => normalizeMedication(m, APP_DEFAULT_START_DATE));
           saveMedsToStorage();
         }
       } catch (err) {
@@ -390,19 +915,32 @@
       localStorage.setItem(STORAGE_KEYS.LOGS, JSON.stringify(dailyLogs));
     }
 
-    function saveNotifiedToStorage() {
-      localStorage.setItem(STORAGE_KEYS.NOTIFIED, JSON.stringify(notifiedToday));
-    }
-
     /**
      * ============================================================================
      * ΛΟΓΙΚΗ ΗΜΕΡΟΛΟΓΙΟΥ & ΧΡΩΜΑΤΙΣΜΟΥ (ΚΟΚΚΙΝΟ / ΠΡΑΣΙΝΟ)
      * ============================================================================
      */
+    function getEarliestTrackingDate() {
+      let earliest = APP_DEFAULT_START_DATE;
+      medications.forEach(m => {
+        if (m.startDate && m.startDate < earliest) earliest = m.startDate;
+      });
+      Object.keys(dailyLogs).forEach(d => {
+        if (d < earliest) earliest = d;
+      });
+      return earliest;
+    }
+
     function getDateStatus(dateStr) {
-      if (medications.length === 0) return 'none';
+      const todayKey = formatDateKey(new Date());
+      const earliestDate = getEarliestTrackingDate();
+      if (dateStr < earliestDate || dateStr > todayKey) return 'none';
+
+      const activeMedsForDay = medications.filter(m => isMedicationActiveOnDate(m, dateStr));
+      if (activeMedsForDay.length === 0) return 'none';
+
       const takenIds = dailyLogs[dateStr] || [];
-      const allTaken = medications.every(med => takenIds.includes(med.id));
+      const allTaken = activeMedsForDay.every(med => takenIds.includes(med.id));
       return allTaken ? 'complete' : 'incomplete';
     }
 
@@ -414,7 +952,6 @@
       monthYearLabel.textContent = `${GREEK_MONTHS[currentViewMonth]} ${currentViewYear}`;
       grid.innerHTML = '';
 
-      // Πρώτη ημέρα του μήνα (Δευτέρα = 0, Κυριακή = 6)
       const firstDayOfMonth = new Date(currentViewYear, currentViewMonth, 1);
       let startDay = firstDayOfMonth.getDay() - 1;
       if (startDay < 0) startDay = 6;
@@ -422,14 +959,12 @@
       const daysInMonth = new Date(currentViewYear, currentViewMonth + 1, 0).getDate();
       const todayKey = formatDateKey(new Date());
 
-      // Κενά κελιά πριν την 1η του μήνα
       for (let i = 0; i < startDay; i++) {
         const emptyCell = document.createElement('div');
         emptyCell.className = 'h-14 sm:h-16 rounded-xl bg-slate-50/60';
         grid.appendChild(emptyCell);
       }
 
-      // Κελιά ημερών του μήνα
       for (let day = 1; day <= daysInMonth; day++) {
         const dateObj = new Date(currentViewYear, currentViewMonth, day);
         const dateStr = formatDateKey(dateObj);
@@ -437,8 +972,9 @@
         const isSelected = dateStr === selectedDateStr;
         const isToday = dateStr === todayKey;
 
-        const takenCount = (dailyLogs[dateStr] || []).filter(id => medications.some(m => m.id === id)).length;
-        const totalCount = medications.length;
+        const activeMedsForDay = medications.filter(m => isMedicationActiveOnDate(m, dateStr));
+        const totalCount = activeMedsForDay.length;
+        const takenCount = (dailyLogs[dateStr] || []).filter(id => activeMedsForDay.some(m => m.id === id)).length;
 
         const cell = document.createElement('button');
         cell.type = 'button';
@@ -455,7 +991,7 @@
           badgeHtml = `<span class="text-[10px] sm:text-xs font-semibold text-rose-700">${takenCount}/${totalCount}</span>`;
         } else {
           colorClasses = 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700';
-          badgeHtml = `<span class="text-[10px] text-slate-400">-</span>`;
+          badgeHtml = `<span class="text-[10px] text-slate-400">${totalCount > 0 ? `${takenCount}/${totalCount}` : '-'}</span>`;
         }
 
         const selectedRing = isSelected
@@ -519,11 +1055,15 @@
 
       heading.textContent = formatGreekDateFull(selectedDateStr);
 
-      const sortedMeds = [...medications].sort((a, b) => a.time.localeCompare(b.time));
+      const activeMedsForDay = medications
+        .filter(m => isMedicationActiveOnDate(m, selectedDateStr))
+        .map(m => ({ med: m, snap: getMedicationSnapshotForDate(m, selectedDateStr) }))
+        .sort((a, b) => a.snap.time.localeCompare(b.snap.time));
+
       const takenIds = dailyLogs[selectedDateStr] || [];
 
-      const total = sortedMeds.length;
-      const completed = sortedMeds.filter(m => takenIds.includes(m.id)).length;
+      const total = activeMedsForDay.length;
+      const completed = activeMedsForDay.filter(m => takenIds.includes(m.id)).length;
       const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
       progressBar.style.width = `${percent}%`;
@@ -541,20 +1081,19 @@
         progressBar.className = 'bg-rose-500 h-2.5 rounded-full transition-all duration-300';
       }
 
-      if (sortedMeds.length === 0) {
+      if (activeMedsForDay.length === 0) {
         checklistEl.innerHTML = `
           <div class="text-center py-8 px-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-            <p class="text-sm font-medium text-slate-600">Δεν έχετε προσθέσει ακόμα χάπια.</p>
-            <p class="text-xs text-slate-400 mt-1">Πατήστε «+ Νέο Χάπι» παρακάτω για να ξεκινήσετε.</p>
+            <p class="text-sm font-medium text-slate-600">Δεν υπάρχουν ενεργά χάπια για αυτή την ημερομηνία.</p>
+            <p class="text-xs text-slate-400 mt-1">Πατήστε «+ Νέο Χάπι» παρακάτω ή επιλέξτε άλλη ημέρα.</p>
           </div>
         `;
         return;
       }
 
       checklistEl.innerHTML = '';
-      sortedMeds.forEach(med => {
+      activeMedsForDay.forEach(({ med, snap }) => {
         const isChecked = takenIds.includes(med.id);
-        const reminderTime = calculateReminderTime(med.time, 30);
 
         const item = document.createElement('label');
         item.className = `flex items-center justify-between gap-3 p-3.5 rounded-xl border transition cursor-pointer select-none ${
@@ -569,19 +1108,16 @@
               class="w-5 h-5 rounded-md accent-emerald-600 cursor-pointer shrink-0" />
             <div class="min-w-0">
               <div class="font-bold text-sm sm:text-base truncate ${isChecked ? 'line-through text-emerald-800/80' : 'text-slate-900'}">
-                ${escapeHtml(med.name)}
+                ${escapeHtml(snap.name)}
               </div>
-              <div class="text-xs text-slate-500 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
-                ${med.dosage ? `<span>${escapeHtml(med.dosage)}</span>` : ''}
-                <span class="text-teal-700 font-medium">• Ειδοποίηση: ${reminderTime}</span>
-              </div>
+              ${snap.dosage ? `<div class="text-xs text-slate-500 mt-0.5 truncate">${escapeHtml(snap.dosage)}</div>` : ''}
             </div>
           </div>
           <div class="shrink-0 flex flex-col items-end">
             <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold ${
               isChecked ? 'bg-emerald-200/70 text-emerald-900' : 'bg-slate-100 text-slate-800'
             }">
-              ${med.time}
+              ${snap.time}
             </span>
           </div>
         `;
@@ -607,19 +1143,47 @@
 
     /**
      * ============================================================================
-     * ΔΙΑΧΕΙΡΙΣΗ ΦΑΡΜΑΚΩΝ (ΠΡΟΣΘΗΚΗ / ΤΡΟΠΟΠΟΙΗΣΗ / ΔΙΑΓΡΑΦΗ)
+     * ΔΙΑΧΕΙΡΙΣΗ ΦΑΡΜΑΚΩΝ (ΠΡΟΣΘΗΚΗ / ΤΡΟΠΟΠΟΙΗΣΗ / ΔΙΑΚΟΠΗ / ΙΣΤΟΡΙΚΟ)
      * ============================================================================
      */
+    function setMedListFilter(filter) {
+      medListFilter = filter;
+      const activeBtn = document.getElementById('filterActiveBtn');
+      const allBtn = document.getElementById('filterAllBtn');
+      if (activeBtn && allBtn) {
+        if (filter === 'active') {
+          activeBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer';
+          allBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer';
+        } else {
+          allBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer';
+          activeBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer';
+        }
+      }
+      renderMedicationsList();
+    }
+
     function renderMedicationsList() {
       const listEl = document.getElementById('medicationsList');
+      const activeBadge = document.getElementById('activeCountBadge');
+      const allBadge = document.getElementById('allCountBadge');
       if (!listEl) return;
 
-      const sortedMeds = [...medications].sort((a, b) => a.time.localeCompare(b.time));
+      const activeMeds = medications.filter(m => !m.endDate);
+      if (activeBadge) activeBadge.textContent = activeMeds.length;
+      if (allBadge) allBadge.textContent = medications.length;
+
+      const filtered = medListFilter === 'active' ? activeMeds : medications;
+      const sortedMeds = [...filtered].sort((a, b) => {
+        if (Boolean(a.endDate) !== Boolean(b.endDate)) {
+          return a.endDate ? 1 : -1;
+        }
+        return a.time.localeCompare(b.time);
+      });
 
       if (sortedMeds.length === 0) {
         listEl.innerHTML = `
           <div class="text-center py-6 px-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-500">
-            Η λίστα των φαρμάκων σας είναι κενή.
+            ${medListFilter === 'active' ? 'Δεν υπάρχουν ενεργά φάρμακα στη λίστα σας.' : 'Η λίστα των φαρμάκων σας είναι κενή.'}
           </div>
         `;
         return;
@@ -627,24 +1191,46 @@
 
       listEl.innerHTML = '';
       sortedMeds.forEach(med => {
+        const isDiscontinued = Boolean(med.endDate);
+        const modCount = (med.history || []).filter(h => h.type === 'modified').length;
+
         const card = document.createElement('div');
-        card.className = 'flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:border-slate-300 transition';
+        card.className = `flex items-center justify-between gap-2.5 p-3 rounded-xl border transition ${
+          isDiscontinued
+            ? 'bg-slate-100/80 border-slate-200 opacity-85'
+            : 'bg-slate-50 border-slate-200/80 hover:border-slate-300'
+        }`;
 
         card.innerHTML = `
           <div class="min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded-md bg-teal-100 text-teal-800 text-xs font-bold">${med.time}</span>
-              <h4 class="font-bold text-sm text-slate-900 truncate">${escapeHtml(med.name)}</h4>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-2 py-0.5 rounded-md ${isDiscontinued ? 'bg-slate-200 text-slate-700' : 'bg-teal-100 text-teal-800'} text-xs font-bold">${med.time}</span>
+              <h4 class="font-bold text-sm ${isDiscontinued ? 'line-through text-slate-600' : 'text-slate-900'} truncate">${escapeHtml(med.name)}</h4>
+              ${isDiscontinued ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700">Διακόπηκε</span>' : ''}
+              ${modCount > 0 ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800">${modCount} ${modCount === 1 ? 'τροπ.' : 'τροπ.'}</span>` : ''}
             </div>
             ${med.dosage ? `<p class="text-xs text-slate-500 mt-1 truncate">${escapeHtml(med.dosage)}</p>` : ''}
+            <div class="text-[11px] text-slate-400 mt-1 flex flex-wrap items-center gap-x-2">
+              <span>Έναρξη: <strong class="font-medium text-slate-600">${formatGreekDateShort(med.startDate)}</strong></span>
+              ${isDiscontinued ? `<span>• Λήξη: <strong class="font-medium text-rose-700">${formatGreekDateShort(med.endDate)}</strong></span>` : ''}
+            </div>
           </div>
-          <div class="flex items-center gap-1 shrink-0">
-            <button type="button" onclick="openMedModal('${med.id}')" title="Τροποποίηση" class="p-2 rounded-lg text-slate-500 hover:text-teal-700 hover:bg-teal-50 transition cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+          <div class="flex items-center gap-0.5 shrink-0">
+            <button type="button" onclick="openHistoryModal('${med.id}')" title="Προβολή ιστορικού & αλλαγών" class="p-2 rounded-lg text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 transition cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </button>
-            <button type="button" onclick="openDeleteModal('${med.id}')" title="Διαγραφή" class="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-            </button>
+            ${!isDiscontinued ? `
+              <button type="button" onclick="openMedModal('${med.id}')" title="Τροποποίηση" class="p-2 rounded-lg text-slate-500 hover:text-teal-700 hover:bg-teal-50 transition cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+              </button>
+              <button type="button" onclick="openDeleteModal('${med.id}')" title="Διακοπή / Διαγραφή" class="p-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            ` : `
+              <button type="button" onclick="reactivateMedication('${med.id}')" title="Επανενεργοποίηση φαρμάκου" class="p-2 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              </button>
+            `}
           </div>
         `;
         listEl.appendChild(card);
@@ -657,7 +1243,13 @@
       const idInput = document.getElementById('medId');
       const nameInput = document.getElementById('medName');
       const timeInput = document.getElementById('medTime');
+      const startDateInput = document.getElementById('medStartDate');
+      const dateLabel = document.getElementById('medDateLabel');
       const dosageInput = document.getElementById('medDosage');
+      const commentInput = document.getElementById('medComment');
+      const commentLabel = document.getElementById('medCommentLabel');
+
+      commentInput.value = '';
 
       if (editId) {
         const med = medications.find(m => m.id === editId);
@@ -666,13 +1258,21 @@
         idInput.value = med.id;
         nameInput.value = med.name;
         timeInput.value = med.time;
+        startDateInput.value = formatDateKey(new Date());
+        dateLabel.textContent = 'Ημερομηνία τροποποίησης *';
         dosageInput.value = med.dosage || '';
+        commentLabel.textContent = 'Σχόλιο / Αιτία τροποποίησης (προαιρετικό)';
+        commentInput.placeholder = 'π.χ. Αλλαγή ώρας κατόπιν οδηγίας γιατρού, αύξηση δόσης...';
       } else {
         title.textContent = 'Προσθήκη Νέου Χαπιού';
         idInput.value = '';
         nameInput.value = '';
         timeInput.value = '09:00';
+        startDateInput.value = formatDateKey(new Date());
+        dateLabel.textContent = 'Ημερομηνία Έναρξης Λήψης *';
         dosageInput.value = '';
+        commentLabel.textContent = 'Σχόλιο / Σημείωση έναρξης (προαιρετικό)';
+        commentInput.placeholder = 'π.χ. Νέα αγωγή από καρδιολόγο, λήψη με γεμάτο στομάχι...';
       }
 
       modal.classList.remove('hidden');
@@ -691,25 +1291,177 @@
       const id = document.getElementById('medId').value.trim();
       const name = document.getElementById('medName').value.trim();
       const time = document.getElementById('medTime').value.trim();
+      const dateInputVal = document.getElementById('medStartDate').value.trim();
       const dosage = document.getElementById('medDosage').value.trim();
+      const comment = document.getElementById('medComment').value.trim();
+      const todayKey = formatDateKey(new Date());
+      const nowIso = new Date().toISOString();
 
       if (!name || !time) return;
 
       if (id) {
         const index = medications.findIndex(m => m.id === id);
         if (index > -1) {
-          medications[index] = { ...medications[index], name, time, dosage };
-          showToast('Ενημερώθηκε', `Το χάπι «${name}» τροποποιήθηκε επιτυχώς.`, 'teal');
+          const oldMed = normalizeMedication(medications[index], APP_DEFAULT_START_DATE);
+          const effectiveModDate = dateInputVal || todayKey;
+          const changes = [];
+
+          if (oldMed.name !== name) {
+            changes.push(`Όνομα: «${name}»`);
+          }
+          if (oldMed.time !== time) {
+            changes.push(`Ώρα: ${time}`);
+          }
+          if ((oldMed.dosage || '') !== dosage) {
+            changes.push(`Δοσολογία: «${dosage || '—'}»`);
+          }
+
+          const history = Array.isArray(oldMed.history) ? [...oldMed.history] : [];
+          const periods = Array.isArray(oldMed.periods) ? [...oldMed.periods] : [];
+          const prevDosageVal = (Array.isArray(oldMed.periods) && oldMed.periods.length > 0 && oldMed.periods[0].dosage !== undefined)
+            ? oldMed.periods[0].dosage
+            : (oldMed.dosage || '');
+          const prevTimeVal = (Array.isArray(oldMed.periods) && oldMed.periods.length > 0 && oldMed.periods[0].time)
+            ? oldMed.periods[0].time
+            : oldMed.time;
+          const prevNameVal = (Array.isArray(oldMed.periods) && oldMed.periods.length > 0 && oldMed.periods[0].name)
+            ? oldMed.periods[0].name
+            : oldMed.name;
+
+          if (changes.length > 0 || comment) {
+            history.push({
+              type: 'modified',
+              date: effectiveModDate,
+              timestamp: nowIso,
+              summary: changes.length > 0 ? changes.join(' | ') : 'Ενημέρωση σημείωσης φαρμάκου',
+              comment,
+              prevSnapshot: {
+                name: prevNameVal,
+                time: prevTimeVal,
+                dosage: prevDosageVal
+              }
+            });
+          }
+
+          const prevDayStr = addDaysToDateKey(effectiveModDate, -1);
+          const preservedStart = oldMed.startDate || APP_DEFAULT_START_DATE;
+
+          if (oldMed.name !== name || oldMed.time !== time || (oldMed.dosage || '') !== dosage) {
+            const effectiveStart = preservedStart;
+            const normalizedExisting = periods.map(p => ({
+              from: p.from || effectiveStart,
+              to: p.to || null,
+              name: p.name || oldMed.name,
+              time: p.time || oldMed.time,
+              dosage: p.dosage !== undefined ? p.dosage : (oldMed.dosage || '')
+            }));
+
+            let builtPeriods = [];
+            if (effectiveModDate > effectiveStart) {
+              builtPeriods = normalizedExisting
+                .filter(p => p.from <= prevDayStr)
+                .map((p, idx, arr) => {
+                  const pFrom = idx === 0 && p.from > effectiveStart ? effectiveStart : p.from;
+                  if (idx === arr.length - 1) {
+                    return {
+                      ...p,
+                      from: pFrom,
+                      to: pFrom <= prevDayStr ? prevDayStr : pFrom
+                    };
+                  }
+                  return {
+                    ...p,
+                    from: pFrom,
+                    to: p.to && p.to <= prevDayStr ? p.to : prevDayStr
+                  };
+                });
+
+              if (builtPeriods.length > 0 && builtPeriods[0].dosage === dosage && prevDosageVal !== dosage) {
+                builtPeriods[0] = {
+                  ...builtPeriods[0],
+                  name: prevNameVal,
+                  time: prevTimeVal,
+                  dosage: prevDosageVal
+                };
+              }
+
+              if (builtPeriods.length === 0) {
+                builtPeriods.push({
+                  from: effectiveStart,
+                  to: prevDayStr,
+                  name: prevNameVal,
+                  time: prevTimeVal,
+                  dosage: prevDosageVal
+                });
+              }
+
+              builtPeriods.push({
+                from: effectiveModDate,
+                to: oldMed.endDate || null,
+                name,
+                time,
+                dosage
+              });
+            } else {
+              builtPeriods = [
+                {
+                  from: effectiveModDate,
+                  to: oldMed.endDate || null,
+                  name,
+                  time,
+                  dosage
+                }
+              ];
+            }
+
+            periods.length = 0;
+            periods.push(...builtPeriods);
+          } else if (periods.length > 0 && preservedStart < (periods[0].from || preservedStart)) {
+            periods[0] = { ...periods[0], from: preservedStart };
+          }
+
+          medications[index] = {
+            ...oldMed,
+            name,
+            time,
+            startDate: preservedStart,
+            dosage,
+            periods,
+            history
+          };
+          showToast('Ενημερώθηκε', `Το χάπι «${name}» τροποποιήθηκε (${formatGreekDateShort(effectiveModDate)}) και καταγράφηκε στο ιστορικό.`, 'teal');
         }
       } else {
+        const startDate = dateInputVal || todayKey;
         const newMed = {
           id: 'med_' + Date.now(),
           name,
           time,
-          dosage
+          dosage,
+          startDate,
+          endDate: null,
+          endComment: '',
+          periods: [
+            {
+              from: startDate,
+              to: null,
+              name,
+              time,
+              dosage
+            }
+          ],
+          history: [
+            {
+              type: 'created',
+              date: startDate,
+              timestamp: nowIso,
+              summary: `Έναρξη αγωγής: ${name} στις ${time}${dosage ? ' (' + dosage + ')' : ''}`,
+              comment
+            }
+          ]
         };
         medications.push(newMed);
-        showToast('Προστέθηκε', `Το χάπι «${name}» προστέθηκε στις ${time}.`, 'teal');
+        showToast('Προστέθηκε', `Το χάπι «${name}» προστέθηκε από ${formatGreekDateShort(startDate)}.`, 'teal');
       }
 
       saveMedsToStorage();
@@ -724,7 +1476,9 @@
       if (!med) return;
       pendingDeleteId = medId;
       document.getElementById('deleteModalText').textContent =
-        `Είστε σίγουροι ότι θέλετε να διαγράψετε το χάπι «${med.name}» (${med.time});`;
+        `Διακοπή του χαπιού «${med.name}» (${med.time}). Θα διατηρηθεί στο ιστορικό και στο PDF.`;
+      document.getElementById('deleteEndDate').value = formatDateKey(new Date());
+      document.getElementById('deleteComment').value = '';
       const modal = document.getElementById('deleteModal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -739,14 +1493,447 @@
 
     document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
       if (!pendingDeleteId) return;
-      medications = medications.filter(m => m.id !== pendingDeleteId);
+      const idx = medications.findIndex(m => m.id === pendingDeleteId);
+      if (idx > -1) {
+        const endDate = document.getElementById('deleteEndDate').value.trim() || formatDateKey(new Date());
+        const endComment = document.getElementById('deleteComment').value.trim();
+        const med = medications[idx];
+        const history = Array.isArray(med.history) ? [...med.history] : [];
+
+        history.push({
+          type: 'discontinued',
+          date: endDate,
+          timestamp: new Date().toISOString(),
+          summary: `Διακοπή / Διαγραφή φαρμάκου (καταληκτική ημερομηνία: ${formatGreekDateShort(endDate)})`,
+          comment: endComment
+        });
+
+        const updatedPeriods = (Array.isArray(med.periods) && med.periods.length > 0
+          ? med.periods
+          : [{ from: med.startDate || APP_DEFAULT_START_DATE, to: null, name: med.name, time: med.time, dosage: med.dosage || '' }]
+        ).map((p, i, arr) => {
+          if (i === arr.length - 1) {
+            return { ...p, to: endDate };
+          }
+          return p;
+        });
+
+        medications[idx] = {
+          ...med,
+          endDate,
+          endComment,
+          periods: updatedPeriods,
+          history
+        };
+      }
+
       saveMedsToStorage();
       closeDeleteModal();
       renderMedicationsList();
       renderDailyChecklist();
       renderCalendar();
-      showToast('Διαγράφηκε', 'Το χάπι αφαιρέθηκε από τη λίστα σας.', 'slate');
+      showToast('Καταχωρήθηκε Διακοπή', 'Το χάπι μεταφέρθηκε στο ιστορικό με καταληκτική ημερομηνία.', 'slate');
     });
+
+    function reactivateMedication(medId) {
+      const idx = medications.findIndex(m => m.id === medId);
+      if (idx === -1) return;
+      const med = medications[idx];
+      const todayKey = formatDateKey(new Date());
+      const history = Array.isArray(med.history) ? [...med.history] : [];
+
+      history.push({
+        type: 'reactivated',
+        date: todayKey,
+        timestamp: new Date().toISOString(),
+        summary: `Επανενεργοποίηση φαρμάκου στις ${formatGreekDateShort(todayKey)}`,
+        comment: ''
+      });
+
+      const reactivatedPeriods = (Array.isArray(med.periods) && med.periods.length > 0
+        ? med.periods
+        : [{ from: med.startDate || APP_DEFAULT_START_DATE, to: null, name: med.name, time: med.time, dosage: med.dosage || '' }]
+      ).map((p, i, arr) => (i === arr.length - 1 ? { ...p, to: null } : p));
+
+      medications[idx] = {
+        ...med,
+        endDate: null,
+        endComment: '',
+        periods: reactivatedPeriods,
+        history
+      };
+
+      saveMedsToStorage();
+      renderMedicationsList();
+      renderDailyChecklist();
+      renderCalendar();
+      showToast('Επανενεργοποιήθηκε', `Το χάπι «${med.name}» είναι ξανά ενεργό.`, 'teal');
+    }
+
+    function openHistoryModal(medId) {
+      const med = medications.find(m => m.id === medId);
+      if (!med) return;
+
+      document.getElementById('historyModalTitle').textContent = med.name;
+      const body = document.getElementById('historyModalBody');
+
+      const statusBadge = med.endDate
+        ? `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800">Διακόπηκε στις ${formatGreekDateShort(med.endDate)}</span>`
+        : `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Ενεργή Αγωγή</span>`;
+
+      const events = med.history || [];
+      const eventsHtml = events.map(ev => {
+        let dotColor = 'bg-teal-500';
+        let badgeText = 'Έναρξη';
+        let badgeStyle = 'bg-teal-100 text-teal-800';
+
+        if (ev.type === 'modified') {
+          dotColor = 'bg-amber-500';
+          badgeText = 'Τροποποίηση';
+          badgeStyle = 'bg-amber-100 text-amber-800';
+        } else if (ev.type === 'discontinued') {
+          dotColor = 'bg-rose-500';
+          badgeText = 'Διακοπή';
+          badgeStyle = 'bg-rose-100 text-rose-800';
+        } else if (ev.type === 'reactivated') {
+          dotColor = 'bg-sky-500';
+          badgeText = 'Επανέναρξη';
+          badgeStyle = 'bg-sky-100 text-sky-800';
+        }
+
+        return `
+          <div class="relative pl-6 pb-4 border-l-2 border-slate-200 last:border-transparent last:pb-0">
+            <span class="w-3 h-3 rounded-full ${dotColor} ring-4 ring-white absolute -left-[7px] top-1"></span>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold ${badgeStyle}">${badgeText}</span>
+              <span class="text-xs font-bold text-slate-700">${formatGreekDateShort(ev.date)}</span>
+            </div>
+            <p class="text-sm text-slate-800 mt-1 leading-snug">${escapeHtml(ev.summary)}</p>
+            ${ev.comment ? `<div class="mt-1.5 text-xs bg-slate-50 border border-slate-200/80 rounded-lg px-2.5 py-1.5 text-slate-600"><strong>Σχόλιο:</strong> ${escapeHtml(ev.comment)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      body.innerHTML = `
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
+          <div class="space-y-1 text-xs text-slate-600">
+            <div>Ώρα λήψης: <strong class="text-slate-900">${med.time}</strong> ${med.dosage ? `• Δοσολογία: <strong class="text-slate-900">${escapeHtml(med.dosage)}</strong>` : ''}</div>
+            <div>Αρχική ημερομηνία λήψης: <strong class="text-slate-900">${formatGreekDateShort(med.startDate)}</strong></div>
+            ${med.endDate ? `<div>Καταληκτική ημερομηνία: <strong class="text-rose-700">${formatGreekDateShort(med.endDate)}</strong></div>` : ''}
+          </div>
+          ${statusBadge}
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Χρονολόγιο Μεταβολών</h4>
+          <div class="mt-2">${eventsHtml}</div>
+        </div>
+      `;
+
+      const modal = document.getElementById('historyModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeHistoryModal() {
+      const modal = document.getElementById('historyModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    /**
+     * ============================================================================
+     * ΕΚΔΟΣΗ PDF ΛΙΣΤΑΣ ΦΑΡΜΑΚΩΝ (ΜΕ ΦΙΛΤΡΟ ΗΜΕΡΟΜΗΝΙΑΣ) & ΙΣΤΟΡΙΚΟΥ ΦΑΡΜΑΚΩΝ
+     * ============================================================================
+     */
+    function openMedListPdfModal() {
+      const dateInput = document.getElementById('medListFilterDate');
+      if (dateInput) {
+        dateInput.value = selectedDateStr || formatDateKey(new Date());
+      }
+      const modal = document.getElementById('medListPdfModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeMedListPdfModal() {
+      const modal = document.getElementById('medListPdfModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function generateMedListPdfForDate() {
+      const dateInput = document.getElementById('medListFilterDate');
+      const targetDate = (dateInput && dateInput.value.trim()) ? dateInput.value.trim() : formatDateKey(new Date());
+      const greekTargetDate = formatGreekDateShort(targetDate);
+
+      const medsForDate = medications
+        .filter(m => isMedicationActiveOnDate(m, targetDate))
+        .map(m => ({ med: m, snap: getMedicationSnapshotForDate(m, targetDate) }))
+        .sort((a, b) => a.snap.time.localeCompare(b.snap.time));
+
+      const nowDate = new Date();
+      const greekDateNow = formatGreekDateShort(formatDateKey(nowDate));
+      const nowStr = `${greekDateNow}, ${String(nowDate.getHours()).padStart(2, '0')}:${String(nowDate.getMinutes()).padStart(2, '0')}`;
+
+      const pdfDocTitle = `Λίστα Φαρμάκων - ${greekTargetDate}`;
+      const originalDocTitle = document.title;
+      document.title = pdfDocTitle;
+      const restoreTitleOnce = () => {
+        document.title = originalDocTitle;
+        window.removeEventListener('afterprint', restoreTitleOnce);
+      };
+      window.addEventListener('afterprint', restoreTitleOnce);
+
+      const listHtml = medsForDate.length === 0
+        ? `<p style="padding: 20px; text-align: center; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 10px;">Δεν υπάρχουν καταχωρημένα φάρμακα για την ημερομηνία ${escapeHtml(greekTargetDate)}.</p>`
+        : `
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1; text-align: left;">
+                <th style="padding: 10px 12px; color: #0f172a; font-weight: 700; width: 45px;">#</th>
+                <th style="padding: 10px 12px; color: #0f172a; font-weight: 700; width: 105px;">Ώρα Λήψης</th>
+                <th style="padding: 10px 12px; color: #0f172a; font-weight: 700;">Φάρμακο / Χάπι</th>
+                <th style="padding: 10px 12px; color: #0f172a; font-weight: 700;">Δοσολογία / Οδηγίες</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${medsForDate.map(({ snap }, idx) => `
+                <tr class="print-card" style="border-bottom: 1px solid #e2e8f0; background: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+                  <td style="padding: 10px 12px; color: #475569; font-weight: 600;">${idx + 1}</td>
+                  <td style="padding: 10px 12px; font-weight: 800; color: #0f766e;">${escapeHtml(snap.time)}</td>
+                  <td style="padding: 10px 12px; font-weight: 700; color: #0f172a;">${escapeHtml(snap.name)}</td>
+                  <td style="padding: 10px 12px; color: #334155;">${snap.dosage ? escapeHtml(snap.dosage) : '—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+
+      const printContainer = document.getElementById('printReportContainer');
+      printContainer.innerHTML = `
+        <div style="font-family: 'Inter', sans-serif; color: #0f172a;">
+          <div style="font-size: 11px; font-weight: 600; color: #334155; margin-bottom: 8px;">
+            ${escapeHtml(nowStr)}
+          </div>
+          <div style="border-bottom: 2px solid #0d9488; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px;">
+            <div>
+              <h1 style="font-size: 21px; font-weight: 800; margin: 2px 0 0 0; color: #0f172a;">
+                Λίστα Φαρμάκων (${escapeHtml(greekTargetDate)})
+              </h1>
+              <div style="font-size: 12px; color: #475569; margin-top: 3px;">
+                ${escapeHtml(formatGreekDateFull(targetDate))}
+              </div>
+            </div>
+            <div style="text-align: right; font-size: 11px; color: #475569;">
+              <div><strong>Ημερομηνία φίλτρου:</strong> ${escapeHtml(greekTargetDate)}</div>
+              <div><strong>Σύνολο φαρμάκων:</strong> ${medsForDate.length}</div>
+            </div>
+          </div>
+
+          <div>
+            ${listHtml}
+          </div>
+        </div>
+      `;
+
+      closeMedListPdfModal();
+      setTimeout(() => {
+        window.print();
+      }, 150);
+    }
+
+    function openPdfOptionsModal() {
+      const modal = document.getElementById('pdfOptionsModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closePdfOptionsModal() {
+      const modal = document.getElementById('pdfOptionsModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function computeAdherenceStats() {
+      const todayKey = formatDateKey(new Date());
+      const earliest = getEarliestTrackingDate();
+      if (earliest > todayKey) return { totalDays: 0, completeDays: 0, totalScheduled: 0, totalTaken: 0 };
+
+      let totalDays = 0;
+      let completeDays = 0;
+      let totalScheduled = 0;
+      let totalTaken = 0;
+
+      const [sy, sm, sd] = earliest.split('-').map(Number);
+      const cursor = new Date(sy, sm - 1, sd);
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+
+      while (cursor <= end) {
+        const dKey = formatDateKey(cursor);
+        const activeMeds = medications.filter(m => isMedicationActiveOnDate(m, dKey));
+        if (activeMeds.length > 0) {
+          totalDays++;
+          const takenIds = dailyLogs[dKey] || [];
+          const takenForDay = activeMeds.filter(m => takenIds.includes(m.id)).length;
+          totalScheduled += activeMeds.length;
+          totalTaken += takenForDay;
+          if (takenForDay === activeMeds.length) completeDays++;
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      return { totalDays, completeDays, totalScheduled, totalTaken, earliest, todayKey };
+    }
+
+    function generateAndPrintPdf() {
+      const scopeEl = document.querySelector('input[name="pdfScope"]:checked');
+      const scope = scopeEl ? scopeEl.value : 'all';
+      const includeHistory = document.getElementById('pdfIncludeHistory').checked;
+      const includeAdherence = document.getElementById('pdfIncludeAdherence').checked;
+      const generalNote = document.getElementById('pdfGeneralNote').value.trim();
+
+      let selectedMeds = [...medications];
+      let scopeLabel = 'Όλα τα φάρμακα (Ενεργά & Διαγραμμένα)';
+
+      if (scope === 'active') {
+        selectedMeds = selectedMeds.filter(m => !m.endDate);
+        scopeLabel = 'Μόνο ενεργά φάρμακα';
+      } else if (scope === 'discontinued') {
+        selectedMeds = selectedMeds.filter(m => Boolean(m.endDate));
+        scopeLabel = 'Μόνο διαγραμμένα / διακοπείσες αγωγές';
+      }
+
+      selectedMeds.sort((a, b) => {
+        if (Boolean(a.endDate) !== Boolean(b.endDate)) {
+          return a.endDate ? 1 : -1;
+        }
+        return a.time.localeCompare(b.time);
+      });
+
+      const nowDate = new Date();
+      const dateKeyNow = formatDateKey(nowDate);
+      const greekDateNow = formatGreekDateShort(dateKeyNow);
+      const nowStr = `${greekDateNow}, ${String(nowDate.getHours()).padStart(2, '0')}:${String(nowDate.getMinutes()).padStart(2, '0')}`;
+      const pdfDocTitle = `Ιστορικό Φαρμάκων - ${greekDateNow}`;
+      const originalDocTitle = document.title;
+      document.title = pdfDocTitle;
+      const restoreTitleOnce = () => {
+        document.title = originalDocTitle;
+        window.removeEventListener('afterprint', restoreTitleOnce);
+      };
+      window.addEventListener('afterprint', restoreTitleOnce);
+
+      let adherenceHtml = '';
+      if (includeAdherence) {
+        const stats = computeAdherenceStats();
+        const rate = stats.totalScheduled > 0 ? Math.round((stats.totalTaken / stats.totalScheduled) * 100) : 0;
+        adherenceHtml = `
+          <div class="print-card" style="margin-top: 18px; padding: 14px 16px; border: 1px solid #cbd5e1; border-radius: 10px; background: #f8fafc;">
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #0f766e; margin-bottom: 6px;">
+              Σύνοψη Συμμόρφωσης Ημερολογίου (${formatGreekDateShort(stats.earliest)} – ${formatGreekDateShort(stats.todayKey)})
+            </div>
+            <div style="display: flex; gap: 24px; flex-wrap: wrap; font-size: 13px; color: #1e293b;">
+              <div><strong>Πλήρεις ημέρες:</strong> ${stats.completeDays} / ${stats.totalDays}</div>
+              <div><strong>Συνολικές λήψεις δόσεων:</strong> ${stats.totalTaken} / ${stats.totalScheduled} (${rate}%)</div>
+            </div>
+          </div>
+        `;
+      }
+
+      const medsHtml = selectedMeds.length === 0
+        ? `<p style="padding: 20px; text-align: center; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 10px;">Δεν βρέθηκαν φάρμακα για τη συγκεκριμένη επιλογή.</p>`
+        : selectedMeds.map((med, idx) => {
+            const isDisc = Boolean(med.endDate);
+            const events = med.history || [];
+            const historyRows = includeHistory && events.length > 0
+              ? `
+                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cbd5e1;">
+                  <div style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 5px;">Ιστορικό Καταχώρησης & Τροποποιήσεων:</div>
+                  <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #334155; line-height: 1.5;">
+                    ${events.map(ev => {
+                      const tag = ev.type === 'created' ? 'Έναρξη'
+                        : ev.type === 'modified' ? 'Τροποποίηση'
+                        : ev.type === 'discontinued' ? 'Διακοπή'
+                        : 'Επανενεργοποίηση';
+                      return `
+                        <li style="margin-bottom: 3px;">
+                          <strong>[${formatGreekDateShort(ev.date)} • ${tag}]</strong> ${escapeHtml(ev.summary)}
+                          ${ev.comment ? `<br/><span style="color: #0f766e; font-style: italic;">Σχόλιο: ${escapeHtml(ev.comment)}</span>` : ''}
+                        </li>
+                      `;
+                    }).join('')}
+                  </ul>
+                </div>
+              `
+              : '';
+
+            return `
+              <div class="print-card" style="border: 1px solid ${isDisc ? '#fecdd3' : '#cbd5e1'}; background: ${isDisc ? '#fff1f2' : '#ffffff'}; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                  <div>
+                    <div style="font-size: 15px; font-weight: 800; color: #0f172a;">
+                      ${idx + 1}. ${escapeHtml(med.name)}
+                    </div>
+                    <div style="font-size: 13px; color: #334155; margin-top: 3px;">
+                      <strong>Ώρα λήψης:</strong> ${med.time}
+                      ${med.dosage ? ` &nbsp;|&nbsp; <strong>Δοσολογία:</strong> ${escapeHtml(med.dosage)}` : ''}
+                    </div>
+                  </div>
+                  <div style="text-align: right; shrink: 0;">
+                    <span style="display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: ${isDisc ? '#ffe4e6' : '#ccfbf1'}; color: ${isDisc ? '#9f1239' : '#115e59'};">
+                      ${isDisc ? 'ΔΙΑΚΟΠΗΚΕ' : 'ΕΝΕΡΓΟ'}
+                    </span>
+                  </div>
+                </div>
+
+                <div style="margin-top: 8px; font-size: 12px; color: #475569; display: flex; gap: 18px; flex-wrap: wrap;">
+                  <div><strong>Αρχική ημ/νία λήψης:</strong> ${formatGreekDateShort(med.startDate)}</div>
+                  <div><strong>Καταληκτική ημ/νία:</strong> ${isDisc ? formatGreekDateShort(med.endDate) : 'Σε εξέλιξη (Ενεργό)'}</div>
+                </div>
+
+                ${historyRows}
+              </div>
+            `;
+          }).join('');
+
+      const printContainer = document.getElementById('printReportContainer');
+      printContainer.innerHTML = `
+        <div style="font-family: 'Inter', sans-serif; color: #0f172a;">
+          <div style="font-size: 11px; font-weight: 600; color: #334155; margin-bottom: 8px;">
+            ${escapeHtml(nowStr)}
+          </div>
+          <div style="border-bottom: 2px solid #0d9488; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px;">
+            <div>
+              <h1 style="font-size: 21px; font-weight: 800; margin: 2px 0 0 0; color: #0f172a;">
+                Ιστορικό Φαρμάκων (${escapeHtml(greekDateNow)})
+              </h1>
+            </div>
+            <div style="text-align: right; font-size: 11px; color: #475569;">
+              <div><strong>Ημερομηνία έκδοσης:</strong> ${nowStr}</div>
+              <div><strong>Φίλτρο:</strong> ${scopeLabel}</div>
+            </div>
+          </div>
+
+          ${generalNote ? `
+            <div style="margin-bottom: 14px; padding: 10px 14px; background: #f1f5f9; border-left: 4px solid #0d9488; border-radius: 6px; font-size: 13px; color: #1e293b;">
+              <strong>Σημείωση:</strong> ${escapeHtml(generalNote)}
+            </div>
+          ` : ''}
+
+          <div>
+            ${medsHtml}
+          </div>
+
+          ${adherenceHtml}
+        </div>
+      `;
+
+      closePdfOptionsModal();
+      setTimeout(() => {
+        window.print();
+      }, 150);
+    }
 
     /**
      * ============================================================================
@@ -756,7 +1943,7 @@
     function exportBackupJson() {
       try {
         const backupPayload = {
-          appVersion: '1.0',
+          appVersion: '2.0',
           exportedAt: new Date().toISOString(),
           medications: medications,
           dailyLogs: dailyLogs
@@ -803,10 +1990,12 @@
             throw new Error('Μη έγκυρη δομή αρχείου JSON');
           }
 
-          // Επικύρωση αντικειμένων φαρμάκων
-          const validMeds = parsed.medications.filter(
-            m => m && typeof m.id === 'string' && typeof m.name === 'string' && typeof m.time === 'string'
-          );
+          const logDates = Object.keys(parsed.dailyLogs).sort();
+          const fallbackDate = logDates.length > 0 ? logDates[0] : APP_DEFAULT_START_DATE;
+
+          const validMeds = parsed.medications
+            .filter(m => m && typeof m.id === 'string' && typeof m.name === 'string' && typeof m.time === 'string')
+            .map(m => normalizeMedication(m, fallbackDate));
 
           medications = validMeds;
           dailyLogs = parsed.dailyLogs;
@@ -820,7 +2009,7 @@
 
           showToast(
             'Επιτυχής Επαναφορά',
-            `Φορτώθηκαν ${medications.length} φάρμακα και το ιστορικό λήψεών σας.`,
+            `Φορτώθηκαν ${medications.length} φάρμακα (μαζί με ημερομηνίες & ιστορικό).`,
             'teal'
           );
         } catch (err) {
@@ -835,220 +2024,6 @@
       reader.readAsText(file);
     }
 
-    /**
-     * ============================================================================
-     * ΕΝΙΑΙΟ ΚΟΥΜΠΙ ΕΙΔΟΠΟΙΗΣΕΩΝ & ΗΧΟΣ ΥΠΕΝΘΥΜΙΣΗΣ
-     * ============================================================================
-     */
-    function getEffectiveNotificationState() {
-      const userOptedIn = localStorage.getItem(STORAGE_KEYS.NOTIF_ENABLED) === 'true';
-
-      if (!('Notification' in window)) {
-        return userOptedIn ? 'granted' : 'unsupported';
-      }
-
-      if (Notification.permission === 'denied') {
-        localStorage.removeItem(STORAGE_KEYS.NOTIF_ENABLED);
-        return 'denied';
-      }
-
-      if (Notification.permission === 'granted' || userOptedIn) {
-        return 'granted';
-      }
-
-      return 'default';
-    }
-
-    function updateNotificationButton() {
-      const btn = document.getElementById('notifActionBtn');
-      if (!btn) return;
-
-      const state = getEffectiveNotificationState();
-
-      if (state === 'unsupported') {
-        btn.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 border border-slate-200 flex items-center gap-2 cursor-not-allowed';
-        btn.title = 'Ο browser σας δεν υποστηρίζει ειδοποιήσεις επιφάνειας εργασίας';
-        btn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5"/><path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
-          <span>Μη Διαθέσιμες στον Browser</span>
-        `;
-      } else if (state === 'granted') {
-        btn.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20 transition flex items-center gap-2 cursor-pointer';
-        btn.title = 'Οι ειδοποιήσεις είναι ενεργοποιημένες. Πατήστε για έλεγχο ήχου.';
-        btn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-          <span>Ειδοποιήσεις Ενεργές στον Browser</span>
-        `;
-      } else if (state === 'denied') {
-        btn.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer';
-        btn.title = 'Έχετε αποκλείσει τις ειδοποιήσεις. Πατήστε για οδηγίες ενεργοποίησης.';
-        btn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-          <span>Ειδοποιήσεις Αποκλεισμένες (Ρυθμίσεις)</span>
-        `;
-      } else {
-        btn.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white transition shadow-sm shadow-amber-500/20 flex items-center gap-2 cursor-pointer';
-        btn.title = 'Πατήστε εδώ για να επιτρέψετε τις ειδοποιήσεις στον browser σας';
-        btn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-          <span>Πατήστε για Ενεργοποίηση Ειδοποιήσεων</span>
-        `;
-      }
-    }
-
-    async function handleNotificationButtonClick() {
-      const state = getEffectiveNotificationState();
-
-      if (state === 'unsupported') {
-        showToast('Μη Διαθέσιμες', 'Ο browser σας δεν υποστηρίζει ειδοποιήσεις συστήματος.', 'rose');
-        return;
-      }
-
-      if (state === 'granted') {
-        updateNotificationButton();
-        playChimeSound();
-        showToast(
-          'Ειδοποιήσεις Ενεργές',
-          'Οι ειδοποιήσεις είναι ήδη ενεργές στον browser! Θα ειδοποιείστε αυτόματα 30 λεπτά πριν από κάθε χάπι.',
-          'teal'
-        );
-        return;
-      }
-
-      if (state === 'denied') {
-        updateNotificationButton();
-        showToast(
-          'Αποκλεισμένες Ειδοποιήσεις',
-          'Για να τις ενεργοποιήσετε, πατήστε το εικονίδιο κλειδαριάς (ή ρυθμίσεων) αριστερά στη γραμμή διευθύνσεων του browser και επιτρέψτε τις «Ειδοποιήσεις».',
-          'rose',
-          8000
-        );
-        return;
-      }
-
-      try {
-        const permission = await Notification.requestPermission();
-        if (permission === 'denied') {
-          localStorage.removeItem(STORAGE_KEYS.NOTIF_ENABLED);
-          updateNotificationButton();
-          showToast(
-            'Αποκλεισμός Ειδοποιήσεων',
-            'Αποκλείσατε τις ειδοποιήσεις. Μπορείτε να τις επιτρέψετε ανά πάσα στιγμή από το εικονίδιο ρυθμίσεων της γραμμής διευθύνσεων.',
-            'rose',
-            7000
-          );
-        } else {
-          localStorage.setItem(STORAGE_KEYS.NOTIF_ENABLED, 'true');
-          updateNotificationButton();
-          playChimeSound();
-          showToast('Επιτυχία!', 'Οι ειδοποιήσεις ενεργοποιήθηκαν. Θα ειδοποιείστε 30 λεπτά πριν από κάθε χάπι.', 'teal');
-        }
-      } catch (err) {
-        console.error('Σφάλμα αιτήματος ειδοποιήσεων:', err);
-        localStorage.setItem(STORAGE_KEYS.NOTIF_ENABLED, 'true');
-        updateNotificationButton();
-        playChimeSound();
-      }
-    }
-
-    function playChimeSound() {
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
-        const now = ctx.currentTime;
-
-        const notes = [587.33, 880]; // D5 -> A5 ευχάριστο καμπανάκι
-        notes.forEach((freq, idx) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, now + idx * 0.18);
-
-          gain.gain.setValueAtTime(0.001, now + idx * 0.18);
-          gain.gain.exponentialRampToValueAtTime(0.2, now + idx * 0.18 + 0.04);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.18 + 0.55);
-
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-
-          osc.start(now + idx * 0.18);
-          osc.stop(now + idx * 0.18 + 0.6);
-        });
-      } catch (e) {
-        // Αγνόηση αν ο browser μπλοκάρει τον ήχο πριν από αλληλεπίδραση χρήστη
-      }
-    }
-
-    function triggerPillNotification(title, body) {
-      playChimeSound();
-      showToast(title, body, 'teal', 12000);
-
-      if ('Notification' in window && Notification.permission === 'granted') {
-        try {
-          new Notification(title, {
-            body: body,
-            tag: title + body,
-            requireInteraction: true
-          });
-        } catch (err) {
-          console.error('Notification error:', err);
-        }
-      }
-    }
-
-    function checkUpcomingPills() {
-      const now = new Date();
-      const todayKey = formatDateKey(now);
-      const currentHH = String(now.getHours()).padStart(2, '0');
-      const currentMM = String(now.getMinutes()).padStart(2, '0');
-      const currentTimeStr = `${currentHH}:${currentMM}`;
-
-      const takenToday = dailyLogs[todayKey] || [];
-
-      medications.forEach(med => {
-        if (takenToday.includes(med.id)) return;
-
-        const targetReminderTime = calculateReminderTime(med.time, 30);
-        const notifKey = `${todayKey}_${med.id}_${med.time}`;
-
-        if (currentTimeStr === targetReminderTime && !notifiedToday[notifKey]) {
-          notifiedToday[notifKey] = true;
-          saveNotifiedToStorage();
-
-          const dosageInfo = med.dosage ? ` (${med.dosage})` : '';
-          triggerPillNotification(
-            `⏰ Υπενθύμιση σε 30 λεπτά: ${med.name}`,
-            `Προγραμματισμένη ώρα λήψης: ${med.time}${dosageInfo}`
-          );
-        }
-      });
-    }
-
-    function watchNotificationPermissionChanges() {
-      if ('permissions' in navigator && typeof navigator.permissions.query === 'function') {
-        navigator.permissions.query({ name: 'notifications' })
-          .then(permissionStatus => {
-            permissionStatus.onchange = () => {
-              if (Notification.permission === 'granted') {
-                localStorage.setItem(STORAGE_KEYS.NOTIF_ENABLED, 'true');
-              } else if (Notification.permission === 'denied') {
-                localStorage.removeItem(STORAGE_KEYS.NOTIF_ENABLED);
-              }
-              updateNotificationButton();
-            };
-          })
-          .catch(() => {});
-      }
-
-      window.addEventListener('focus', updateNotificationButton);
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-          updateNotificationButton();
-        }
-      });
-    }
-
     function showToast(title, message, theme = 'teal', duration = 5000) {
       const container = document.getElementById('toastContainer');
       if (!container) return;
@@ -1060,14 +2035,14 @@
 
       toast.innerHTML = `
         <div class="w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
         </div>
         <div class="flex-1 min-w-0">
           <h5 class="text-sm font-bold text-slate-900">${escapeHtml(title)}</h5>
           <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">${escapeHtml(message)}</p>
         </div>
-        <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        <button type="button" onclick="this.parentElement.remove()" class="px-2.5 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold transition cursor-pointer shrink-0">
+          Κλείσιμο
         </button>
       `;
 
@@ -1076,10 +2051,12 @@
         toast.classList.remove('translate-y-2', 'opacity-0');
       });
 
-      setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-2');
-        setTimeout(() => toast.remove(), 300);
-      }, duration);
+      if (duration > 0) {
+        setTimeout(() => {
+          toast.classList.add('opacity-0', 'translate-y-2');
+          setTimeout(() => toast.remove(), 300);
+        }, duration);
+      }
     }
 
     function escapeHtml(str) {
@@ -1099,15 +2076,9 @@
      */
     window.addEventListener('DOMContentLoaded', () => {
       loadFromStorage();
-      updateNotificationButton();
-      watchNotificationPermissionChanges();
       renderCalendar();
       renderDailyChecklist();
       renderMedicationsList();
-
-      // Άμεσος έλεγχος και επανάληψη κάθε 15 δευτερόλεπτα
-      checkUpcomingPills();
-      setInterval(checkUpcomingPills, 15000);
     });
   </script>
 </body>
